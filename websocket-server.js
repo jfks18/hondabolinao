@@ -12,7 +12,9 @@ class SecureWebSocketServer {
     this.security = {
       rateLimitPerMinute: parseInt(process.env.RATE_LIMIT_PER_MINUTE) || 60,
       maxConnections: parseInt(process.env.MAX_CONNECTIONS) || 100,
-      allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(','),
+      allowedOrigins: process.env.ALLOWED_ORIGINS 
+        ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+        : ['http://localhost:3000', 'https://honda-dealership-frontend.onrender.com'],
       enableRateLimit: process.env.ENABLE_RATE_LIMITING === 'true',
       enableAuth: process.env.ENABLE_AUTH === 'true'
     };
@@ -53,9 +55,14 @@ class SecureWebSocketServer {
     const origin = info.origin;
     const ip = info.req.socket.remoteAddress;
     
-    // Origin validation
-    if (!this.security.allowedOrigins.includes(origin) && !origin?.includes('localhost')) {
+    // Origin validation - allow localhost and configured origins
+    const allowedOrigins = this.security.allowedOrigins.filter(Boolean);
+    const isLocalhost = origin?.includes('localhost') || origin?.includes('127.0.0.1');
+    const isAllowedOrigin = allowedOrigins.length === 0 || allowedOrigins.includes(origin);
+    
+    if (!isLocalhost && !isAllowedOrigin) {
       console.warn(`🚨 Rejected connection from unauthorized origin: ${origin}`);
+      console.warn(`🔍 Allowed origins: ${allowedOrigins.join(', ')}`);
       return false;
     }
 
