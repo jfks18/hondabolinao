@@ -1,0 +1,56 @@
+# Render Blueprint for Honda 3S Dealership
+# This file enables one-click deployment to Render.com
+
+services:
+  # WebSocket Server Service
+  - type: web
+    name: honda-websocket-server
+    env: node
+    plan: free
+    buildCommand: npm install ws
+    startCommand: node websocket-server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: RATE_LIMIT_PER_MINUTE
+        value: 60
+      - key: MAX_CONNECTIONS
+        value: 100
+      - key: ENABLE_RATE_LIMITING
+        value: true
+      - key: ENABLE_AUTH
+        value: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+        # Will be updated after frontend deployment
+
+  # Next.js Frontend Service  
+  - type: web
+    name: honda-dealership-frontend
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_ENABLE_REAL_TIME
+        value: true
+      - key: NEXT_PUBLIC_RATE_LIMIT_PER_MINUTE
+        value: 60
+      - key: NEXT_PUBLIC_MAX_CONNECTIONS
+        value: 100
+      - key: NEXT_PUBLIC_ENABLE_ENCRYPTION
+        value: false
+      - key: NEXT_PUBLIC_ENABLE_SIGNATURE_VALIDATION
+        value: false
+      - key: NEXT_PUBLIC_AUTH_ENABLED
+        value: false
+      - key: NEXT_PUBLIC_CACHE_DURATION
+        value: 300000
+      - key: NEXT_PUBLIC_HEARTBEAT_INTERVAL
+        value: 30000
+      - key: NEXT_PUBLIC_WS_URL
+        sync: false
+        # Will be set to: wss://honda-websocket-server.onrender.com

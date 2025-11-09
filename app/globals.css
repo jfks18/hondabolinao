@@ -24,3 +24,140 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Perfect Infinite Loop Carousel */
+@keyframes infiniteScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.infinite-scroll {
+  animation: infiniteScroll 25s linear infinite;
+  will-change: transform;
+  display: flex;
+  width: fit-content;
+}
+
+.infinite-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Carousel container for smooth rendering */
+.carousel-wrapper {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Individual card styling for consistent sizing */
+.carousel-card {
+  flex: 0 0 auto;
+  width: 320px;
+  margin: 0 24px;
+}
+
+/* Alternative speed options */
+.infinite-scroll-fast {
+  animation: infiniteScroll 15s linear infinite;
+}
+
+.infinite-scroll-slow {
+  animation: infiniteScroll 40s linear infinite;
+}
+
+/* Perfect Circular Infinite Loop - No Flicker */
+@keyframes circularInfiniteScroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.circular-infinite-scroll {
+  display: flex;
+  width: fit-content;
+  animation: circularInfiniteScroll 30s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.circular-infinite-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Real-time Notification Animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-slide-out-right {
+  animation: slideOutRight 0.3s ease-in;
+}
+
+/* Real-time Update Flash Effect */
+@keyframes flashGreen {
+  0% { background-color: transparent; }
+  50% { background-color: rgba(34, 197, 94, 0.2); }
+  100% { background-color: transparent; }
+}
+
+.flash-update {
+  animation: flashGreen 0.8s ease-in-out;
+}
+
+/* Pulse for low stock items */
+@keyframes lowStockPulse {
+  0%, 100% { 
+    background-color: rgb(234, 179, 8);
+    transform: scale(1);
+  }
+  50% { 
+    background-color: rgb(245, 158, 11);
+    transform: scale(1.05);
+  }
+}
+
+.low-stock-pulse {
+  animation: lowStockPulse 2s infinite;
+}
+
+/* Connection status indicator */
+@keyframes connectionPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.connection-pulse {
+  animation: connectionPulse 1.5s infinite;
+}

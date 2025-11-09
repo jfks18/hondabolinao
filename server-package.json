@@ -1,0 +1,31 @@
+{
+  "name": "honda-dealership-websocket-server",
+  "version": "1.0.0",
+  "description": "Secure WebSocket server for Honda 3S dealership real-time inventory management",
+  "main": "websocket-server.js",
+  "scripts": {
+    "start": "node websocket-server.js",
+    "dev": "node websocket-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "websocket",
+    "honda",
+    "dealership",
+    "inventory",
+    "real-time",
+    "secure"
+  ],
+  "author": "Honda 3S Dealership",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/honda-dealership"
+  }
+}

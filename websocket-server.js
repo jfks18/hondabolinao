@@ -1,0 +1,404 @@
+// Honda Dealership Secure WebSocket Server for Production Deployment
+const WebSocket = require('ws');
+const http = require('http');
+
+class SecureWebSocketServer {
+  constructor() {
+    this.clients = new Map();
+    this.rateLimitTracker = new Map();
+    this.authenticatedUsers = new Map();
+    
+    // Security configuration
+    this.security = {
+      rateLimitPerMinute: parseInt(process.env.RATE_LIMIT_PER_MINUTE) || 60,
+      maxConnections: parseInt(process.env.MAX_CONNECTIONS) || 100,
+      allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(','),
+      enableRateLimit: process.env.ENABLE_RATE_LIMITING === 'true',
+      enableAuth: process.env.ENABLE_AUTH === 'true'
+    };
+    
+    this.initializeServer();
+  }
+
+  initializeServer() {
+    // Create HTTP server for health checks
+    this.server = http.createServer();
+    
+    // Create WebSocket server with security
+    this.wss = new WebSocket.Server({
+      server: this.server,
+      verifyClient: (info) => this.verifyClient(info)
+    });
+
+    console.log('🚀 Honda Secure WebSocket Server Starting...');
+    console.log(`🛡️  Security: Rate Limiting ${this.security.enableRateLimit ? 'ON' : 'OFF'}`);
+    console.log(`🔐 Authentication: ${this.security.enableAuth ? 'ON' : 'OFF'}`);
+    console.log(`🌐 Allowed Origins: ${this.security.allowedOrigins.join(', ')}`);
+    
+    this.wss.on('connection', (ws, req) => {
+      this.handleConnection(ws, req);
+    });
+
+    // Setup HTTP routes
+    this.setupHTTPRoutes();
+
+    // Cleanup rate limiting data every minute
+    setInterval(() => {
+      this.cleanupRateLimitData();
+    }, 60000);
+  }
+
+  // 🛡️ Security: Verify client connection
+  verifyClient(info) {
+    const origin = info.origin;
+    const ip = info.req.socket.remoteAddress;
+    
+    // Origin validation
+    if (!this.security.allowedOrigins.includes(origin) && !origin?.includes('localhost')) {
+      console.warn(`🚨 Rejected connection from unauthorized origin: ${origin}`);
+      return false;
+    }
+
+    // Connection limit
+    if (this.wss.clients.size >= this.security.maxConnections) {
+      console.warn(`🚨 Connection limit reached (${this.security.maxConnections})`);
+      return false;
+    }
+
+    // Rate limiting by IP
+    if (this.isRateLimitedByIP(ip)) {
+      console.warn(`🚨 Rate limited connection from IP: ${ip}`);
+      return false;
+    }
+
+    return true;
+  }
+
+  // 🚦 Rate limiting by IP
+  isRateLimitedByIP(ip) {
+    if (!this.security.enableRateLimit) return false;
+    
+    const now = Date.now();
+    const connections = this.rateLimitTracker.get(ip) || [];
+    
+    // Remove old connections (older than 1 minute)
+    const recentConnections = connections.filter(t => now - t < 60000);
+    
+    // Allow max 10 connections per minute per IP
+    if (recentConnections.length >= 10) {
+      return true;
+    }
+
+    recentConnections.push(now);
+    this.rateLimitTracker.set(ip, recentConnections);
+    return false;
+  }
+
+  // 🔐 Handle new WebSocket connection
+  handleConnection(ws, req) {
+    const clientId = this.generateClientId();
+    const clientIP = req.socket.remoteAddress;
+    
+    console.log(`🔌 Client connected: ${clientId} from ${clientIP} - Total: ${this.clients.size + 1}`);
+    
+    // Store client info
+    this.clients.set(ws, {
+      id: clientId,
+      ip: clientIP,
+      connected: Date.now(),
+      authenticated: !this.security.enableAuth, // Auto-auth if auth disabled
+      userId: null,
+      lastActivity: Date.now()
+    });
+
+    // Send welcome message
+    this.sendToClient(ws, {
+      type: 'notification',
+      data: {
+        message: '🔄 Connected to Honda Secure Real-time System',
+        type: 'success',
+        features: {
+          secure: true,
+          rateLimited: this.security.enableRateLimit,
+          authenticated: this.security.enableAuth
+        }
+      },
+      timestamp: new Date()
+    });
+
+    // Set up message handlers
+    ws.on('message', (data) => {
+      this.handleMessage(ws, data);
+    });
+
+    ws.on('close', (code) => {
+      const client = this.clients.get(ws);
+      console.log(`🔌 Client ${client?.id} disconnected - Remaining: ${this.clients.size - 1}`);
+      this.clients.delete(ws);
+    });
+
+    ws.on('error', (error) => {
+      const client = this.clients.get(ws);
+      console.error(`🚨 WebSocket error for ${client?.id}:`, error);
+      this.clients.delete(ws);
+    });
+
+    // Set up ping/pong for connection health
+    this.setupHeartbeat(ws);
+  }
+
+  // 📨 Handle incoming messages
+  handleMessage(ws, data) {
+    const client = this.clients.get(ws);
+    if (!client) return;
+
+    try {
+      const message = JSON.parse(data.toString());
+      
+      // Update last activity
+      client.lastActivity = Date.now();
+
+      // Handle different message types
+      switch (message.type) {
+        case 'auth':
+          this.handleAuthentication(ws, message);
+          break;
+        case 'ping':
+          this.sendToClient(ws, { type: 'pong', timestamp: new Date() });
+          break;
+        case 'inventory':
+        case 'promo':
+        case 'availability':
+          this.handleDataUpdate(ws, message);
+          break;
+        default:
+          console.log(`📦 Broadcasting ${message.type} update from ${client.id}`);
+          this.broadcastMessage(message, ws);
+      }
+    } catch (error) {
+      console.error(`🚨 Error parsing message from ${client?.id}:`, error);
+    }
+  }
+
+  // 🔐 Handle authentication (simple version)
+  handleAuthentication(ws, message) {
+    const client = this.clients.get(ws);
+    if (!client) return;
+
+    // Simple auth - in production, validate against proper auth service
+    const { sessionId, userId } = message.data || {};
+    
+    if (sessionId && userId) {
+      client.authenticated = true;
+      client.userId = userId;
+      
+      console.log(`🔐 Client ${client.id} authenticated as ${userId}`);
+      
+      this.sendToClient(ws, {
+        type: 'auth_success',
+        data: { userId, timestamp: Date.now() }
+      });
+    } else {
+      this.sendToClient(ws, {
+        type: 'auth_error',
+        data: { message: 'Authentication failed' }
+      });
+    }
+  }
+
+  // 📊 Handle data updates and broadcast
+  handleDataUpdate(ws, message) {
+    const client = this.clients.get(ws);
+    if (!client || (this.security.enableAuth && !client.authenticated)) {
+      console.warn(`🚨 Unauthorized data update from ${client?.id}`);
+      return;
+    }
+
+    console.log(`📦 Broadcasting ${message.type} update from ${client.userId || client.id}`);
+    this.broadcastMessage(message, ws);
+  }
+
+  // 📡 Broadcast message to all clients
+  broadcastMessage(message, excludeWs = null) {
+    let broadcastCount = 0;
+    
+    this.clients.forEach((client, ws) => {
+      if (ws !== excludeWs && 
+          (!this.security.enableAuth || client.authenticated) && 
+          ws.readyState === WebSocket.OPEN) {
+        this.sendToClient(ws, message);
+        broadcastCount++;
+      }
+    });
+
+    console.log(`📡 Broadcasted to ${broadcastCount} clients`);
+  }
+
+  // 📤 Send message to specific client
+  sendToClient(ws, message) {
+    if (ws.readyState === WebSocket.OPEN) {
+      try {
+        ws.send(JSON.stringify(message));
+      } catch (error) {
+        console.error('🚨 Error sending message:', error);
+      }
+    }
+  }
+
+  // ❤️ Setup heartbeat for connection health
+  setupHeartbeat(ws) {
+    const interval = setInterval(() => {
+      const client = this.clients.get(ws);
+      if (!client) {
+        clearInterval(interval);
+        return;
+      }
+
+      // Check if client is still active (last activity within 5 minutes)
+      const now = Date.now();
+      const inactiveTime = now - client.lastActivity;
+      
+      if (inactiveTime > 5 * 60 * 1000) { // 5 minutes
+        console.log(`⏰ Disconnecting inactive client: ${client.id}`);
+        ws.close(1000, 'Inactive connection');
+        clearInterval(interval);
+        return;
+      }
+
+      // Send ping if connection is open
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.ping();
+      }
+    }, 30000); // Every 30 seconds
+
+    ws.on('pong', () => {
+      const client = this.clients.get(ws);
+      if (client) {
+        client.lastActivity = Date.now();
+      }
+    });
+
+    ws.on('close', () => {
+      clearInterval(interval);
+    });
+  }
+
+  // 🌐 Setup HTTP routes
+  setupHTTPRoutes() {
+    this.server.on('request', (req, res) => {
+      // Enable CORS
+      res.setHeader('Access-Control-Allow-Origin', this.security.allowedOrigins.join(','));
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+      if (req.method === 'OPTIONS') {
+        res.writeHead(200);
+        res.end();
+        return;
+      }
+
+      if (req.url === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(this.getHealthStats()));
+      } else if (req.url === '/stats') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(this.getDetailedStats()));
+      } else {
+        res.writeHead(404);
+        res.end('Honda WebSocket Server - Endpoints: /health, /stats');
+      }
+    });
+  }
+
+  // 📊 Get health statistics
+  getHealthStats() {
+    const authenticatedClients = Array.from(this.clients.values()).filter(c => c.authenticated);
+    
+    return {
+      status: 'ok',
+      clients: this.clients.size,
+      authenticated: authenticatedClients.length,
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  // 📊 Get detailed statistics
+  getDetailedStats() {
+    const clients = Array.from(this.clients.values());
+    const now = Date.now();
+    
+    return {
+      ...this.getHealthStats(),
+      security: this.security,
+      rateLimitedIPs: this.rateLimitTracker.size,
+      averageConnectionTime: clients.reduce((sum, c) => sum + (now - c.connected), 0) / clients.length || 0,
+      memoryUsage: process.memoryUsage(),
+      clientDetails: clients.map(c => ({
+        id: c.id,
+        authenticated: c.authenticated,
+        userId: c.userId,
+        connectedFor: now - c.connected,
+        lastActivity: now - c.lastActivity
+      }))
+    };
+  }
+
+  // 🔧 Generate unique client ID
+  generateClientId() {
+    return 'client_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+  }
+
+  // 🧹 Cleanup old rate limiting data
+  cleanupRateLimitData() {
+    const now = Date.now();
+    const cutoff = now - 60000; // 1 minute ago
+    
+    this.rateLimitTracker.forEach((timestamps, ip) => {
+      const recent = timestamps.filter(t => t > cutoff);
+      if (recent.length === 0) {
+        this.rateLimitTracker.delete(ip);
+      } else {
+        this.rateLimitTracker.set(ip, recent);
+      }
+    });
+  }
+
+  // 🚀 Start the server
+  listen(port) {
+    const PORT = port || process.env.PORT || 8081;
+    
+    this.server.listen(PORT, () => {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`🏍️  Honda Secure Real-time Server running on port ${PORT}`);
+      console.log(`📊 Health check: http://localhost:${PORT}/health`);
+      console.log(`📈 Statistics: http://localhost:${PORT}/stats`);
+      console.log(`🔄 WebSocket: ws://localhost:${PORT}`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('💡 Ready for secure real-time inventory updates!');
+    });
+  }
+
+  // 🛑 Graceful shutdown
+  shutdown() {
+    console.log('🛑 Server shutting down...');
+    
+    this.wss.close(() => {
+      this.server.close(() => {
+        console.log('✅ Server closed gracefully');
+        process.exit(0);
+      });
+    });
+  }
+}
+
+// Initialize and start the server
+const hondaServer = new SecureWebSocketServer();
+hondaServer.listen();
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => hondaServer.shutdown());
+process.on('SIGINT', () => hondaServer.shutdown());
+
+// Export for testing
+module.exports = { SecureWebSocketServer, server: hondaServer };
