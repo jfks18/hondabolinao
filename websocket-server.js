@@ -8,13 +8,18 @@ class SecureWebSocketServer {
     this.rateLimitTracker = new Map();
     this.authenticatedUsers = new Map();
     
-    // Security configuration
+    // Security configuration - More permissive for production
     this.security = {
       rateLimitPerMinute: parseInt(process.env.RATE_LIMIT_PER_MINUTE) || 60,
       maxConnections: parseInt(process.env.MAX_CONNECTIONS) || 100,
       allowedOrigins: process.env.ALLOWED_ORIGINS 
         ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-        : ['http://localhost:3000', 'https://honda-dealership-frontend.onrender.com'],
+        : [
+            'http://localhost:3000',
+            'https://localhost:3000', 
+            'https://honda-dealership-frontend.onrender.com',
+            'https://hondabolinao-20dg.onrender.com'
+          ],
       enableRateLimit: process.env.ENABLE_RATE_LIMITING === 'true',
       enableAuth: process.env.ENABLE_AUTH === 'true'
     };
@@ -55,16 +60,32 @@ class SecureWebSocketServer {
     const origin = info.origin;
     const ip = info.req.socket.remoteAddress;
     
-    // Origin validation - allow localhost and configured origins
-    const allowedOrigins = this.security.allowedOrigins.filter(Boolean);
+    // For production, be more permissive with origins
+    console.log(`📡 Connection attempt from origin: ${origin}`);
+    
+    // Allow localhost for development
     const isLocalhost = origin?.includes('localhost') || origin?.includes('127.0.0.1');
+    
+    // Allow Render domains
+    const isRenderDomain = origin?.includes('onrender.com');
+    
+    // Allow if no origin (some clients don't send origin header)
+    const noOrigin = !origin;
+    
+    // Check configured allowed origins
+    const allowedOrigins = this.security.allowedOrigins.filter(Boolean);
     const isAllowedOrigin = allowedOrigins.length === 0 || allowedOrigins.includes(origin);
     
-    if (!isLocalhost && !isAllowedOrigin) {
-      console.warn(`🚨 Rejected connection from unauthorized origin: ${origin}`);
-      console.warn(`🔍 Allowed origins: ${allowedOrigins.join(', ')}`);
-      return false;
+    // Allow connection if any condition is met
+    if (isLocalhost || isRenderDomain || noOrigin || isAllowedOrigin) {
+      console.log(`✅ Connection allowed from: ${origin || 'no-origin'}`);
+      return true;
     }
+    
+    // Only reject if none of the conditions are met
+    console.warn(`🚨 Rejected connection from unauthorized origin: ${origin}`);
+    console.warn(`🔍 Allowed: localhost, *.onrender.com, configured origins: ${allowedOrigins.join(', ')}`);
+    return false;
 
     // Connection limit
     if (this.wss.clients.size >= this.security.maxConnections) {
