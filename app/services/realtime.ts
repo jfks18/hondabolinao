@@ -226,7 +226,7 @@ class RealtimeService {
     try {
       // Use WSS for production (secure WebSocket)
       const wsUrl = process.env.NODE_ENV === 'production'
-        ? process.env.NEXT_PUBLIC_WSS_URL || 'wss://your-websocket-server.onrender.com'
+        ? process.env.NEXT_PUBLIC_WSS_URL || 'wss://honda-websocket-server.onrender.com'
         : 'ws://localhost:8081';
 
       this.ws = new WebSocket(wsUrl);
