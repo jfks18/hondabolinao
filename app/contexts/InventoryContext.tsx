@@ -161,6 +161,35 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      // If no API base is configured or the API call failed, try to fetch the static seed in public/
+      try {
+        const publicRes = await fetch('/inventory.json');
+        if (publicRes.ok) {
+          const publicBody = await publicRes.json();
+          const pubInventory = publicBody.inventory || [];
+          const pubPromos = publicBody.promos || [];
+
+          const parsedInventory = (pubInventory || []).map((item: any) => ({
+            ...item,
+            lastUpdated: item.lastUpdated ? new Date(item.lastUpdated) : new Date()
+          }));
+
+          const parsedPromos = (pubPromos || []).map((promo: any) => ({
+            ...promo,
+            startDate: promo.startDate ? new Date(promo.startDate) : new Date(),
+            endDate: promo.endDate ? new Date(promo.endDate) : new Date()
+          }));
+
+          setInventory(parsedInventory);
+          setPromos(parsedPromos);
+          saveToLocalStorage(parsedInventory, parsedPromos);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        // ignore - we'll fall back to localStorage or sample data below
+      }
+
       // Try to load from localStorage as fallback
       const savedInventory = localStorage.getItem('honda-inventory');
       const savedPromos = localStorage.getItem('honda-promos');
