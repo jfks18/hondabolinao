@@ -208,7 +208,18 @@ export default function RealTimeInventoryAdmin() {
           <div className="space-y-8">
             {Object.entries(groupedInventory)
               .sort(([a], [b]) => parseInt(a) - parseInt(b))
-              .map(([modelId, items]) => (
+              .map(([modelId, items]) => {
+                // Ensure available colors are shown first
+                const sortedItems = items.slice().sort((a, b) => {
+                  const aAvailable = a.isAvailable && a.quantity > 0 ? 0 : 1;
+                  const bAvailable = b.isAvailable && b.quantity > 0 ? 0 : 1;
+                  return aAvailable - bAvailable;
+                });
+
+                // Find the first available color to surface in the model header
+                const firstAvailable = sortedItems.find(i => i.isAvailable && i.quantity > 0);
+
+                return (
                 <div key={modelId} className="border border-gray-300 rounded-xl p-6 bg-gray-50">
                   {/* Motorcycle Model Header */}
                   <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-300">
@@ -221,6 +232,22 @@ export default function RealTimeInventoryAdmin() {
                           {motorcycleNames[modelId] || `Model ${modelId}`}
                         </h3>
                         <p className="text-gray-600">{items.length} color variants available</p>
+                        {firstAvailable ? (
+                          <div className="flex items-center mt-1">
+                            <div
+                              className="w-4 h-4 rounded-full mr-2 border-2 border-white shadow-sm"
+                              style={{ backgroundColor: firstAvailable.colorHex }}
+                              title={firstAvailable.colorName}
+                            />
+                            <span className="text-sm text-green-600 font-medium">
+                              Available: {firstAvailable.colorName} ({firstAvailable.quantity} units)
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="mt-1">
+                            <span className="text-sm text-red-600 font-medium">No available colors</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -248,12 +275,7 @@ export default function RealTimeInventoryAdmin() {
                   
                   {/* Color Variants Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {items.slice().sort((a, b) => {
-                      // Always show available colors first (available && quantity > 0)
-                      const aAvailable = a.isAvailable && a.quantity > 0 ? 0 : 1;
-                      const bAvailable = b.isAvailable && b.quantity > 0 ? 0 : 1;
-                      return aAvailable - bAvailable;
-                    }).map(item => (
+                    {sortedItems.map(item => (
               <div 
                 key={item.id} 
                 className={`border-2 rounded-xl p-4 transition-all duration-300 bg-white ${
