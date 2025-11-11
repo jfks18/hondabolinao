@@ -248,7 +248,12 @@ export default function RealTimeInventoryAdmin() {
                   
                   {/* Color Variants Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {items.map(item => (
+                    {items.slice().sort((a, b) => {
+                      // Always show available colors first (available && quantity > 0)
+                      const aAvailable = a.isAvailable && a.quantity > 0 ? 0 : 1;
+                      const bAvailable = b.isAvailable && b.quantity > 0 ? 0 : 1;
+                      return aAvailable - bAvailable;
+                    }).map(item => (
               <div 
                 key={item.id} 
                 className={`border-2 rounded-xl p-4 transition-all duration-300 bg-white ${
