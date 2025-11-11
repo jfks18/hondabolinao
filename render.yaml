@@ -24,7 +24,7 @@ services:
       - key: ENABLE_AUTH
         value: "false"
       - key: ALLOWED_ORIGINS
-        value: "https://honda-dealership-frontend.onrender.com,https://hondabolinao-20dg.onrender.com"
+        value: "https://honda-dealership-frontend.onrender.com"
       - key: JSON_DB_PATH
         value: "/tmp/inventory.json"
 
