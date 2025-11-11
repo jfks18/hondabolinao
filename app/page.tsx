@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useInventory } from './contexts/InventoryContext';
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
 import ProductGrid from './components/ProductGrid';
@@ -17,6 +18,24 @@ export default function Home() {
       console.log('Added to wishlist:', product.name);
     }
   };
+
+  // Show a quick overview of available colors site-wide (from inventory)
+  const { inventory } = useInventory();
+
+  const availableColorsMap = inventory
+    .filter(i => i.isAvailable && i.quantity > 0)
+    .reduce((acc: Record<string, { hex: string; quantity: number; models: Set<string> }>, item) => {
+      if (!acc[item.colorName]) {
+        acc[item.colorName] = { hex: item.colorHex, quantity: 0, models: new Set() };
+      }
+      acc[item.colorName].quantity += item.quantity;
+      acc[item.colorName].models.add(item.modelId);
+      return acc;
+    }, {} as Record<string, { hex: string; quantity: number; models: Set<string> }>);
+
+  const availableColors = Object.entries(availableColorsMap)
+    .map(([name, v]) => ({ name, hex: v.hex, quantity: v.quantity, models: v.models.size }))
+    .sort((a, b) => b.quantity - a.quantity);
 
   return (
     <CartProvider>

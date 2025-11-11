@@ -25,6 +25,8 @@ services:
         value: "false"
       - key: ALLOWED_ORIGINS
         value: "https://honda-dealership-frontend.onrender.com,https://hondabolinao-20dg.onrender.com"
+      - key: JSON_DB_PATH
+        value: "/tmp/inventory.json"
 
   # Next.js Frontend Service  
   - type: web
@@ -37,20 +39,22 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_ENABLE_REAL_TIME
-        value: true
+        value: "true"
       - key: NEXT_PUBLIC_RATE_LIMIT_PER_MINUTE
         value: 60
       - key: NEXT_PUBLIC_MAX_CONNECTIONS
         value: 100
       - key: NEXT_PUBLIC_ENABLE_ENCRYPTION
-        value: false
+        value: "false"
       - key: NEXT_PUBLIC_ENABLE_SIGNATURE_VALIDATION
-        value: false
+        value: "false"
       - key: NEXT_PUBLIC_AUTH_ENABLED
-        value: false
+        value: "false"
       - key: NEXT_PUBLIC_CACHE_DURATION
         value: 300000
       - key: NEXT_PUBLIC_HEARTBEAT_INTERVAL
         value: 30000
-      - key: NEXT_PUBLIC_WS_URL
+      - key: NEXT_PUBLIC_WSS_URL
         value: wss://honda-websocket-server.onrender.com
+      - key: NEXT_PUBLIC_API_BASE
+        value: https://honda-websocket-server.onrender.com

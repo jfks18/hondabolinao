@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p $PORT",
     "lint": "eslint",
     "ws": "node websocket-server.js",
     "dev:full": "concurrently \"npm run ws\" \"npm run dev\""
@@ -26,5 +26,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "concurrently": "^7.6.0"
+  }
+  ,"engines": {
+    "node": ">=18.0.0"
   }
 }

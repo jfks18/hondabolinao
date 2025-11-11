@@ -1,12 +1,15 @@
 // Honda Dealership Secure WebSocket Server for Production Deployment
 const WebSocket = require('ws');
 const http = require('http');
+const { loadDB, upsertInventoryItem, upsertPromo, deletePromo, DB_PATH } = require('./utils/jsonDb');
 
 class SecureWebSocketServer {
   constructor() {
     this.clients = new Map();
     this.rateLimitTracker = new Map();
     this.authenticatedUsers = new Map();
+  this.inventory = [];
+  this.promos = [];
     
     // Security configuration - Production ready with your specific URLs
     this.security = {
@@ -26,6 +29,18 @@ class SecureWebSocketServer {
     };
     
     this.initializeServer();
+
+    // Load persistent data (inventory + promos) from JSON DB on startup
+    loadDB().then(data => {
+      this.inventory = Array.isArray(data.inventory) ? data.inventory : [];
+      this.promos = Array.isArray(data.promos) ? data.promos : [];
+      console.log(`📦 Loaded inventory from ${DB_PATH} — ${this.inventory.length} items`);
+      console.log(`🎯 Loaded promos from ${DB_PATH} — ${this.promos.length} items`);
+    }).catch(err => {
+      console.error('🚨 Failed to load DB:', err);
+      this.inventory = [];
+      this.promos = [];
+    });
   }
 
   initializeServer() {
@@ -243,6 +258,36 @@ class SecureWebSocketServer {
       return;
     }
 
+    console.log(`📦 Received ${message.type} update from ${client.userId || client.id}`);
+
+    // Persist inventory updates to JSON DB and broadcast the updated inventory
+    if (message.type === 'inventory') {
+      const item = message.data;
+      // Upsert the item into the JSON DB and in-memory store
+      upsertInventoryItem(item).then(updatedInventory => {
+        this.inventory = updatedInventory;
+        // Broadcast the full inventory to all clients
+        this.broadcastMessage({ type: 'inventory', data: this.inventory }, ws);
+      }).catch(err => {
+        console.error('🚨 Failed to persist inventory update:', err);
+      });
+      return;
+    }
+
+    // Persist promo updates similarly
+    if (message.type === 'promo') {
+      const promo = message.data;
+      upsertPromo(promo).then(updatedPromos => {
+        this.promos = updatedPromos;
+        // Broadcast the promo update to all clients (single promo)
+        this.broadcastMessage({ type: 'promo', data: promo }, ws);
+      }).catch(err => {
+        console.error('🚨 Failed to persist promo update:', err);
+      });
+      return;
+    }
+
+    // Other update types: just broadcast
     console.log(`📦 Broadcasting ${message.type} update from ${client.userId || client.id}`);
     this.broadcastMessage(message, ws);
   }
@@ -329,6 +374,79 @@ class SecureWebSocketServer {
       if (req.url === '/health') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(this.getHealthStats()));
+        return;
+      }
+
+      if (req.url === '/inventory' && req.method === 'GET') {
+        // Return the current DB (inventory + promos)
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ inventory: this.inventory, promos: this.promos }));
+        return;
+      }
+
+      if (req.url === '/inventory' && req.method === 'POST') {
+        // Accept a JSON body with a single item to upsert
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', async () => {
+          try {
+            const item = JSON.parse(body);
+            const updated = await upsertInventoryItem(item);
+            this.inventory = updated;
+            // Broadcast update to all clients
+            this.broadcastMessage({ type: 'inventory', data: this.inventory });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: true, inventory: this.inventory }));
+          } catch (err) {
+            console.error('🚨 /inventory POST error:', err);
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: false, error: String(err) }));
+          }
+        });
+        return;
+      }
+
+      // Delete promo: DELETE /promo?id=PROMO_ID
+      if (req.url.startsWith('/promo') && req.method === 'DELETE') {
+        const url = new URL(req.url, `http://${req.headers.host}`);
+        const promoId = url.searchParams.get('id');
+        if (!promoId) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'missing id' }));
+          return;
+        }
+        deletePromo(promoId).then(updated => {
+          this.promos = updated;
+          this.broadcastMessage({ type: 'promo', data: { id: promoId, deleted: true } });
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true, promos: this.promos }));
+        }).catch(err => {
+          console.error('🚨 /promo DELETE error:', err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: String(err) }));
+        });
+        return;
+      }
+
+      if (req.url === '/promo' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', async () => {
+          try {
+            const promo = JSON.parse(body);
+            const updated = await upsertPromo(promo);
+            this.promos = updated;
+            // Broadcast the promo to all clients (single promo)
+            this.broadcastMessage({ type: 'promo', data: promo });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: true, promos: this.promos }));
+          } catch (err) {
+            console.error('🚨 /promo POST error:', err);
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: false, error: String(err) }));
+          }
+        });
+        return;
       } else if (req.url === '/stats') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(this.getDetailedStats()));

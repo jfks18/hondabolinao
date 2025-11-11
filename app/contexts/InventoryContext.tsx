@@ -1,4 +1,4 @@
-'use client';
+ls -l data/inventory.json'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { realtimeService } from '../services/realtime';
@@ -30,6 +30,15 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Helper to resolve HTTP API base (prefer explicit API base over deriving from WSS)
+  const getApiBase = () => {
+    const explicit = (process.env.NEXT_PUBLIC_API_BASE || '').trim();
+    if (explicit) return explicit.replace(/\/$/, '');
+    const wsUrl = process.env.NEXT_PUBLIC_WSS_URL || '';
+    if (!wsUrl) return '';
+    return wsUrl.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:').replace(/\/$/, '');
+  };
 
   // Real-time inventory updates
   const handleInventoryUpdate = useCallback((data: InventoryItem) => {
@@ -115,13 +124,49 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      // Try to load from localStorage first
+      // Attempt to load inventory from the server API (preferred)
+  const apiBase = getApiBase();
+
+      if (apiBase) {
+        try {
+          const res = await fetch(`${apiBase}/inventory`, { method: 'GET' });
+          if (res.ok) {
+            const body = await res.json();
+            // server may return { inventory: [...], promos: [...] } or an array
+            const serverInventory = Array.isArray(body) ? body : body.inventory || [];
+            const serverPromos = (body && !Array.isArray(body)) ? (body.promos || []) : [];
+
+            // Normalize inventory dates
+            const parsedInventory = (serverInventory || []).map((item: any) => ({
+              ...item,
+              lastUpdated: item.lastUpdated ? new Date(item.lastUpdated) : new Date()
+            }));
+
+            // Normalize promos dates
+            const parsedPromos = (serverPromos || []).map((promo: any) => ({
+              ...promo,
+              startDate: promo.startDate ? new Date(promo.startDate) : new Date(),
+              endDate: promo.endDate ? new Date(promo.endDate) : new Date()
+            }));
+
+            setInventory(parsedInventory);
+            setPromos(parsedPromos);
+            // Cache locally
+            saveToLocalStorage(parsedInventory, parsedPromos);
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.warn('⚠️ Failed to fetch inventory from server, falling back to cache/sample:', err);
+        }
+      }
+
+      // Try to load from localStorage as fallback
       const savedInventory = localStorage.getItem('honda-inventory');
       const savedPromos = localStorage.getItem('honda-promos');
-      
+
       if (savedInventory && savedPromos) {
         try {
-          // Load saved data
           const parsedInventory = JSON.parse(savedInventory).map((item: any) => ({
             ...item,
             lastUpdated: new Date(item.lastUpdated)
@@ -131,34 +176,28 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
             startDate: new Date(promo.startDate),
             endDate: new Date(promo.endDate)
           }));
-          
-          // Check for invalid CLICK160 colors (Pearl Organic Green should not exist)
+
           const hasInvalidClick160 = parsedInventory.some((item: any) => 
             item.modelId === '16' && item.colorName === 'Pearl Organic Green'
           );
-          
-          if (hasInvalidClick160) {
-            // Clear localStorage and reload fresh data
-            localStorage.removeItem('honda-inventory');
-            localStorage.removeItem('honda-promos');
-            console.log('🔧 Detected invalid CLICK160 colors, clearing cache...');
-            // Continue to load fresh sample data below
-          } else {
+
+          if (!hasInvalidClick160) {
             setInventory(parsedInventory);
             setPromos(parsedPromos);
             setLoading(false);
             return;
           }
+          // otherwise fallthrough to sample data
         } catch (error) {
           console.error('Error parsing localStorage data:', error);
           localStorage.removeItem('honda-inventory');
           localStorage.removeItem('honda-promos');
         }
       }
-      
+
       // If no saved data, load sample data
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const sampleInventory: InventoryItem[] = [
         // Honda NAVi (ID: 1)
         { id: 'inv_1_1', modelId: '1', colorName: 'Shasta White', colorHex: '#F8F8FF', quantity: 3, isAvailable: true, lastUpdated: new Date() },
@@ -320,11 +359,19 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       });
       
       try {
-        // Broadcast to all connected clients
-        realtimeService.broadcast('inventory', updatedItem);
-        
-        // In production, save to database here
-        // await saveToDatabase('inventory', updatedItem);
+        // Persist to server DB (will broadcast to other clients)
+  const apiBase = getApiBase();
+        if (apiBase) {
+          const res = await fetch(`${apiBase}/inventory`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedItem)
+          });
+          if (!res.ok) throw new Error('Server failed to persist inventory');
+        } else {
+          // If no API base, fallback to broadcasting only
+          realtimeService.broadcast('inventory', updatedItem);
+        }
         
       } catch (error) {
         console.error('Failed to save inventory update:', error);
@@ -347,22 +394,58 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         lastUpdated: new Date()
       };
 
+      // Optimistic update
       setInventory(prev => {
         const newInventory = prev.map(i => i.id === itemId ? updatedItem : i);
         saveToLocalStorage(newInventory, promos);
         return newInventory;
       });
-      realtimeService.broadcast('inventory', updatedItem);
+
+      try {
+  const apiBase = getApiBase();
+        if (apiBase) {
+          const res = await fetch(`${apiBase}/inventory`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedItem)
+          });
+          if (!res.ok) throw new Error('Server failed to persist availability change');
+        } else {
+          realtimeService.broadcast('inventory', updatedItem);
+        }
+      } catch (err) {
+        console.error('Failed to persist availability change:', err);
+        // Revert on error
+        setInventory(prev => prev.map(i => i.id === itemId ? item : i));
+      }
     }
   };
 
   const updatePromo = async (promo: PromoData) => {
+    const prevPromos = promos;
     setPromos(prev => {
       const newPromos = prev.map(p => p.id === promo.id ? promo : p);
       saveToLocalStorage(inventory, newPromos);
       return newPromos;
     });
-    realtimeService.broadcast('promo', promo);
+
+    try {
+  const apiBase = getApiBase();
+      if (apiBase) {
+        const res = await fetch(`${apiBase}/promo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(promo)
+        });
+        if (!res.ok) throw new Error('Failed to persist promo');
+      } else {
+        realtimeService.broadcast('promo', promo);
+      }
+    } catch (err) {
+      console.error('Failed to persist promo update:', err);
+      // revert
+      setPromos(prevPromos);
+    }
   };
 
   const addPromo = async (promoData: Omit<PromoData, 'id'>) => {
@@ -370,23 +453,53 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       ...promoData,
       id: Date.now().toString() // Simple ID generation
     };
-    
+    const prevPromos = promos;
     setPromos(prev => {
       const newPromos = [...prev, newPromo];
       saveToLocalStorage(inventory, newPromos);
       return newPromos;
     });
-    realtimeService.broadcast('promo', newPromo);
+
+    try {
+  const apiBase = getApiBase();
+      if (apiBase) {
+        const res = await fetch(`${apiBase}/promo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newPromo)
+        });
+        if (!res.ok) throw new Error('Failed to persist new promo');
+      } else {
+        realtimeService.broadcast('promo', newPromo);
+      }
+    } catch (err) {
+      console.error('Failed to persist new promo:', err);
+      setPromos(prevPromos);
+    }
   };
 
   const deletePromo = async (promoId: string) => {
+    const prevPromos = promos;
     setPromos(prev => {
       const newPromos = prev.filter(p => p.id !== promoId);
       saveToLocalStorage(inventory, newPromos);
       return newPromos;
     });
-    // You might want a separate delete event type
-    realtimeService.broadcast('promo', { id: promoId, deleted: true });
+
+    try {
+  const apiBase = getApiBase();
+      if (apiBase) {
+        const res = await fetch(`${apiBase}/promo?id=${encodeURIComponent(promoId)}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) throw new Error('Failed to delete promo');
+      } else {
+        realtimeService.broadcast('promo', { id: promoId, deleted: true });
+      }
+    } catch (err) {
+      console.error('Failed to delete promo:', err);
+      setPromos(prevPromos);
+    }
   };
 
   const refreshData = async () => {
