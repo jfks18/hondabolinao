@@ -40,7 +40,7 @@ class RealtimeService {
     allowedOrigins: [
       process.env.NEXT_PUBLIC_ALLOWED_ORIGIN || 'https://honda-websocket-server.onrender.com',
       'https://honda-dealership-frontend.onrender.com', // Your Render domain
-      ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : [])
+      ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'https://honda-dealership-frontend.onrender.com','https://honda-websocket-server.onrender.com'] : [])
     ]
   };
 
