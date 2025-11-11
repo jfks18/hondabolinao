@@ -7,7 +7,7 @@ services:
     name: honda-websocket-server
     env: node
     plan: free
-  # Install all dependencies (use CI for reproducible installs) and then start the server
+    # Install all dependencies (use CI for reproducible installs) and then start the server
   buildCommand: npm ci --production || npm install
   startCommand: node websocket-server.js
     healthCheckPath: /health
