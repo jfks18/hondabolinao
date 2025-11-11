@@ -7,8 +7,9 @@ services:
     name: honda-websocket-server
     env: node
     plan: free
-    buildCommand: npm install ws
-    startCommand: node websocket-server.js
+  # Install all dependencies (use CI for reproducible installs) and then start the server
+  buildCommand: npm ci --production || npm install
+  startCommand: node websocket-server.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -18,11 +19,12 @@ services:
       - key: MAX_CONNECTIONS
         value: 100
       - key: ENABLE_RATE_LIMITING
-        value: true
+        # Render stores env values as strings; websocket-server.js expects 'true'/'false' strings
+        value: "true"
       - key: ENABLE_AUTH
-        value: false
+        value: "false"
       - key: ALLOWED_ORIGINS
-        value: https://honda-dealership-frontend.onrender.com
+        value: "https://honda-dealership-frontend.onrender.com,https://hondabolinao-20dg.onrender.com"
 
   # Next.js Frontend Service  
   - type: web
