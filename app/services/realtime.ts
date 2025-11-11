@@ -38,8 +38,8 @@ class RealtimeService {
     messageTimeout: 10000, // 10 seconds
     rateLimitPerMinute: 60, // Max 60 messages per minute
     allowedOrigins: [
-      process.env.NEXT_PUBLIC_ALLOWED_ORIGIN || 'https://yourdomain.com',
-      'https://hondabolinao.onrender.com', // Your Render domain
+      process.env.NEXT_PUBLIC_ALLOWED_ORIGIN || 'https://honda-websocket-server.onrender.com',
+      'https://honda-dealership-frontend.onrender.com', // Your Render domain
       ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : [])
     ]
   };
