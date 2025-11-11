@@ -17,7 +17,7 @@ class SecureWebSocketServer {
         : [
             'http://localhost:3000',
             'https://localhost:3000', 
-            'https://honda-dealership-frontend.onrender.com',
+            'https://honda-dealership-frontend.onrender.com/',
             'https://hondabolinao-20dg.onrender.com',
             'https://honda-websocket-server.onrender.com'
           ],
