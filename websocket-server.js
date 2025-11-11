@@ -397,12 +397,13 @@ class SecureWebSocketServer {
   listen(port) {
     const PORT = port || process.env.PORT || 8081;
     
-    this.server.listen(PORT, () => {
+    // Bind explicitly to 0.0.0.0 so platform load-balancers (like Render) can reach the server
+    this.server.listen(PORT, '0.0.0.0', () => {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log(`🏍️  Honda Secure Real-time Server running on port ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`📈 Statistics: http://localhost:${PORT}/stats`);
-      console.log(`🔄 WebSocket: ws://localhost:${PORT}`);
+      console.log(`📊 Health check: http://0.0.0.0:${PORT}/health`);
+      console.log(`📈 Statistics: http://0.0.0.0:${PORT}/stats`);
+      console.log(`🔄 WebSocket: ws://0.0.0.0:${PORT}`);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('💡 Ready for secure real-time inventory updates!');
     });
