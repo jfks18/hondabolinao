@@ -195,8 +195,43 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // If no saved data, load sample data
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // If no saved data, try to load from the repository data file first (data/inventory.json).
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      try {
+        // Dynamic import so this only runs in the client when needed.
+        // The repo's `data/inventory.json` isn't served from /public by default, but importing here
+        // allows using the same JSON contents as the sample data.
+        // Use a dynamic import to avoid bundling it unnecessarily during server builds.
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const staticData = await import('../../data/inventory.json');
+        const fileInventory = (staticData && (staticData.inventory || staticData.default?.inventory)) || staticData.default || [];
+
+        if (Array.isArray(fileInventory) && fileInventory.length > 0) {
+          const parsedInventory = fileInventory.map((item: any) => ({
+            ...item,
+            lastUpdated: item.lastUpdated ? new Date(item.lastUpdated) : new Date()
+          }));
+
+          const filePromosRaw = (staticData && (staticData.promos || staticData.default?.promos)) || [];
+          const parsedPromos = (filePromosRaw || []).map((promo: any) => ({
+            ...promo,
+            startDate: promo.startDate ? new Date(promo.startDate) : new Date(),
+            endDate: promo.endDate ? new Date(promo.endDate) : new Date()
+          }));
+
+          setInventory(parsedInventory);
+          setPromos(parsedPromos);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        // If import fails (file missing or not resolvable), fall back to embedded sample data below
+        // console.debug('No local data file available, using embedded sample data.', err);
+      }
+
+      // If no saved data or static file, load embedded sample data
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const sampleInventory: InventoryItem[] = [
         // Honda NAVi (ID: 1)
