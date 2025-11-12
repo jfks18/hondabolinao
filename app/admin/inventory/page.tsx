@@ -38,6 +38,8 @@ export default function RealTimeInventoryAdmin() {
     isConnected, 
     lastUpdate,
     loading,
+    source,
+    loadPublicSeed,
     updateInventory, 
     updateAvailability, 
     updatePromo,
@@ -163,6 +165,25 @@ export default function RealTimeInventoryAdmin() {
             </h1>
             
             <div className="flex items-center space-x-4">
+              {/* Data source badge */}
+              <div className="text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-700">
+                Source: <span className="font-semibold ml-2">{source || 'unknown'}</span>
+              </div>
+
+              <div className="text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-700">
+                Items: <span className="font-semibold ml-2">{inventory.length}</span>
+              </div>
+
+              {/* Load public seed button (manual) */}
+              <button
+                onClick={async () => {
+                  const ok = await loadPublicSeed();
+                  if (!ok) alert('Failed to load public/inventory.json');
+                }}
+                className="bg-yellow-400 text-white px-3 py-1 rounded-lg hover:bg-yellow-500 transition-colors"
+              >
+                Load public seed
+              </button>
               {/* Connection Status */}
               <div className="flex items-center">
                 <div className={`w-3 h-3 rounded-full mr-2 ${
