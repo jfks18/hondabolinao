@@ -391,9 +391,17 @@ class SecureWebSocketServer {
       }
 
       if (req.url === '/inventory' && req.method === 'GET') {
-        // Return the current DB (inventory + promos)
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ inventory: this.inventory, promos: this.promos }));
+        // Return the current DB (inventory + promos) directly from the JSON DB on disk
+        loadDB().then(data => {
+          const inv = Array.isArray(data.inventory) ? data.inventory : [];
+          const promos = Array.isArray(data.promos) ? data.promos : [];
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ inventory: inv, promos }));
+        }).catch(err => {
+          console.error('🚨 /inventory GET error (DB read):', err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: String(err) }));
+        });
         return;
       }
 
