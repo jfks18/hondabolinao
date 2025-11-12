@@ -1,104 +1,543 @@
 {
-	"inventory": [
-		{ "id": "inv_1_1", "modelId": "1", "colorName": "Shasta White", "colorHex": "#F8F8FF", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_1_2", "modelId": "1", "colorName": "Patriot Red", "colorHex": "#DC143C", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_1_3", "modelId": "1", "colorName": "Black", "colorHex": "#1C1C1C", "quantity": 4, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_1_4", "modelId": "1", "colorName": "Ranger Green R", "colorHex": "#355E3B", "quantity": 1, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_2_1", "modelId": "2", "colorName": "Fighting Red", "colorHex": "#DC143C", "quantity": 5, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_2_2", "modelId": "2", "colorName": "Pearl Sylvestris Gray", "colorHex": "#708090", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_2_3", "modelId": "2", "colorName": "Pearl Tourmaline Purple", "colorHex": "#9966CC", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_3_1", "modelId": "3", "colorName": "Matte Axis Gray Metallic", "colorHex": "#708090", "quantity": 4, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_3_2", "modelId": "3", "colorName": "Pearl Arctic White", "colorHex": "#F8F8FF", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_3_3", "modelId": "3", "colorName": "Matte Summit Silver Metallic", "colorHex": "#C0C0C0", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_4_1", "modelId": "4", "colorName": "Pearl Arctic White", "colorHex": "#F8F8FF", "quantity": 6, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_4_2", "modelId": "4", "colorName": "Pearl Sylvestris Gray", "colorHex": "#708090", "quantity": 4, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_4_3", "modelId": "4", "colorName": "Stellar Blue Metallic", "colorHex": "#4682B4", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_4_4", "modelId": "4", "colorName": "Obsidian Black Metallic", "colorHex": "#1C1C1C", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_5_1", "modelId": "5", "colorName": "Obsidian Black Metallic", "colorHex": "#1C1C1C", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_5_2", "modelId": "5", "colorName": "Pearl Arctic White", "colorHex": "#F8F8FF", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_5_3", "modelId": "5", "colorName": "Pearl Crimson Red", "colorHex": "#DC143C", "quantity": 1, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_6_1", "modelId": "6", "colorName": "Virgin Beige", "colorHex": "#F5E6D3", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_6_2", "modelId": "6", "colorName": "Matte Gunpowder Black Metallic", "colorHex": "#2C2C2C", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_6_3", "modelId": "6", "colorName": "Pearl Jubilee White", "colorHex": "#F8F8FF", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_6_4", "modelId": "6", "colorName": "Piquant Orange", "colorHex": "#FF6B35", "quantity": 1, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_7_1", "modelId": "7", "colorName": "Force Silver Metallic", "colorHex": "#A8A8A8", "quantity": 5, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_7_2", "modelId": "7", "colorName": "Pearl Nightstar Black", "colorHex": "#1C1C1C", "quantity": 4, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_7_3", "modelId": "7", "colorName": "Candy Luster Red", "colorHex": "#DC143C", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_8_1", "modelId": "8", "colorName": "Black", "colorHex": "#000000", "quantity": 4, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_8_2", "modelId": "8", "colorName": "Candy Ruby Red", "colorHex": "#DC143C", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_9_1", "modelId": "9", "colorName": "Infinity Red", "colorHex": "#DC143C", "quantity": 6, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_9_2", "modelId": "9", "colorName": "Poseidon Black Metallic", "colorHex": "#1C1C1C", "quantity": 4, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_10_1", "modelId": "10", "colorName": "Matte Galaxy Black Metallic", "colorHex": "#2C2C2C", "quantity": 5, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_10_2", "modelId": "10", "colorName": "Pearl Iceberg White", "colorHex": "#FFFEF7", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_11_1", "modelId": "11", "colorName": "Fighting Red", "colorHex": "#DC143C", "quantity": 4, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_11_2", "modelId": "11", "colorName": "Black", "colorHex": "#000000", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_11_3", "modelId": "11", "colorName": "Aura Blue R", "colorHex": "#1E3A8A", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_12_1", "modelId": "12", "colorName": "Ross White", "colorHex": "#FFFFFF", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_13_1", "modelId": "13", "colorName": "Black", "colorHex": "#000000", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_14_1", "modelId": "14", "colorName": "Matte Axis Gray Metallic", "colorHex": "#6B7280", "quantity": 4, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_14_2", "modelId": "14", "colorName": "Victory Red", "colorHex": "#DC143C", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_15_1", "modelId": "15", "colorName": "Winning Red (Honda Tri-Color)", "colorHex": "#DC143C", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_16_1", "modelId": "16", "colorName": "Matte Gunpowder Black Metallic", "colorHex": "#2F3136", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_16_2", "modelId": "16", "colorName": "Matte Cosmo Silver Metallic", "colorHex": "#8E9AAF", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_16_3", "modelId": "16", "colorName": "Matte Solar Red Metallic", "colorHex": "#D32F2F", "quantity": 1, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_17_1", "modelId": "17", "colorName": "Vortex Red Metallic", "colorHex": "#B91C1C", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_17_2", "modelId": "17", "colorName": "Pearl Fadeless White", "colorHex": "#FAFAFA", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_17_3", "modelId": "17", "colorName": "Matte Bullet Silver", "colorHex": "#8C92AC", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_18_1", "modelId": "18", "colorName": "Matte Gunpowder Black Metallic", "colorHex": "#2C2C2C", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_18_2", "modelId": "18", "colorName": "Pearl Fadeless White", "colorHex": "#FAFAFA", "quantity": 1, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_19_1", "modelId": "19", "colorName": "Matte Gunpowder Black Metallic", "colorHex": "#2C2C2C", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_19_2", "modelId": "19", "colorName": "Matte Solar Red Metallic", "colorHex": "#B91C1C", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_19_3", "modelId": "19", "colorName": "Matte Pearl Crater White", "colorHex": "#F5F5F5", "quantity": 1, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_20_1", "modelId": "20", "colorName": "Matte Gunpowder Black Metallic", "colorHex": "#2C2C2C", "quantity": 1, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_20_2", "modelId": "20", "colorName": "Moscato Red Metallic", "colorHex": "#8B2635", "quantity": 1, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_21_1", "modelId": "21", "colorName": "Pearl Iceberg White", "colorHex": "#FFFEF7", "quantity": 5, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_21_2", "modelId": "21", "colorName": "Infinity Red", "colorHex": "#DC143C", "quantity": 3, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_22_1", "modelId": "22", "colorName": "Matte Galaxy Black Metallic", "colorHex": "#2C2C2C", "quantity": 2, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-		{ "id": "inv_22_2", "modelId": "22", "colorName": "Matte Meteoric Red Metallic", "colorHex": "#8B0000", "quantity": 4, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" },
-
-		{ "id": "inv_23_1", "modelId": "23", "colorName": "Infinity Red", "colorHex": "#DC143C", "quantity": 1, "isAvailable": true, "lastUpdated": "2025-11-11T00:00:00.000Z" }
-	],
-	"promos": [
-		{
-			"id": "1",
-			"modelIds": ["21", "22", "23"],
-			"title": "Honda Winner X Mega Promo",
-			"description": "FREE Registration + Xtreme Rice Cooker + Premium Helmet",
-			"freebies": ["LTO Registration", "Xtreme Rice Cooker", "Premium Helmet"],
-			"startDate": "2025-11-03T00:00:00.000Z",
-			"endDate": "2025-12-31T00:00:00.000Z",
-			"isActive": true
-		},
-		{
-			"id": "2",
-			"modelIds": ["15"],
-			"title": "CBR150R Racing Promo",
-			"description": "FREE Racing Jacket + Gloves",
-			"freebies": ["Racing Jacket", "Racing Gloves"],
-			"startDate": "2025-11-01T00:00:00.000Z",
-			"endDate": "2025-11-30T00:00:00.000Z",
-			"isActive": true
-		}
-	]
+  "inventory": [
+    {
+      "id": "inv_1_1",
+      "modelId": "1",
+      "colorName": "Shasta White",
+      "colorHex": "#F8F8FF",
+      "quantity": 4,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-12T09:14:24+00:00"
+    },
+    {
+      "id": "inv_1_2",
+      "modelId": "1",
+      "colorName": "Patriot Red",
+      "colorHex": "#DC143C",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_1_3",
+      "modelId": "1",
+      "colorName": "Black",
+      "colorHex": "#1C1C1C",
+      "quantity": 4,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_1_4",
+      "modelId": "1",
+      "colorName": "Ranger Green R",
+      "colorHex": "#355E3B",
+      "quantity": 1,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_2_1",
+      "modelId": "2",
+      "colorName": "Fighting Red",
+      "colorHex": "#DC143C",
+      "quantity": 5,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_2_2",
+      "modelId": "2",
+      "colorName": "Pearl Sylvestris Gray",
+      "colorHex": "#708090",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_2_3",
+      "modelId": "2",
+      "colorName": "Pearl Tourmaline Purple",
+      "colorHex": "#9966CC",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_3_1",
+      "modelId": "3",
+      "colorName": "Matte Axis Gray Metallic",
+      "colorHex": "#708090",
+      "quantity": 4,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_3_2",
+      "modelId": "3",
+      "colorName": "Pearl Arctic White",
+      "colorHex": "#F8F8FF",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_3_3",
+      "modelId": "3",
+      "colorName": "Matte Summit Silver Metallic",
+      "colorHex": "#C0C0C0",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_4_1",
+      "modelId": "4",
+      "colorName": "Pearl Arctic White",
+      "colorHex": "#F8F8FF",
+      "quantity": 6,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_4_2",
+      "modelId": "4",
+      "colorName": "Pearl Sylvestris Gray",
+      "colorHex": "#708090",
+      "quantity": 4,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_4_3",
+      "modelId": "4",
+      "colorName": "Stellar Blue Metallic",
+      "colorHex": "#4682B4",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_4_4",
+      "modelId": "4",
+      "colorName": "Obsidian Black Metallic",
+      "colorHex": "#1C1C1C",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_5_1",
+      "modelId": "5",
+      "colorName": "Obsidian Black Metallic",
+      "colorHex": "#1C1C1C",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_5_2",
+      "modelId": "5",
+      "colorName": "Pearl Arctic White",
+      "colorHex": "#F8F8FF",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_5_3",
+      "modelId": "5",
+      "colorName": "Pearl Crimson Red",
+      "colorHex": "#DC143C",
+      "quantity": 1,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_6_1",
+      "modelId": "6",
+      "colorName": "Virgin Beige",
+      "colorHex": "#F5E6D3",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_6_2",
+      "modelId": "6",
+      "colorName": "Matte Gunpowder Black Metallic",
+      "colorHex": "#2C2C2C",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_6_3",
+      "modelId": "6",
+      "colorName": "Pearl Jubilee White",
+      "colorHex": "#F8F8FF",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_6_4",
+      "modelId": "6",
+      "colorName": "Piquant Orange",
+      "colorHex": "#FF6B35",
+      "quantity": 1,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_7_1",
+      "modelId": "7",
+      "colorName": "Force Silver Metallic",
+      "colorHex": "#A8A8A8",
+      "quantity": 5,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_7_2",
+      "modelId": "7",
+      "colorName": "Pearl Nightstar Black",
+      "colorHex": "#1C1C1C",
+      "quantity": 4,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_7_3",
+      "modelId": "7",
+      "colorName": "Candy Luster Red",
+      "colorHex": "#DC143C",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_8_1",
+      "modelId": "8",
+      "colorName": "Black",
+      "colorHex": "#000000",
+      "quantity": 4,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_8_2",
+      "modelId": "8",
+      "colorName": "Candy Ruby Red",
+      "colorHex": "#DC143C",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_9_1",
+      "modelId": "9",
+      "colorName": "Infinity Red",
+      "colorHex": "#DC143C",
+      "quantity": 6,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_9_2",
+      "modelId": "9",
+      "colorName": "Poseidon Black Metallic",
+      "colorHex": "#1C1C1C",
+      "quantity": 4,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_10_1",
+      "modelId": "10",
+      "colorName": "Matte Galaxy Black Metallic",
+      "colorHex": "#2C2C2C",
+      "quantity": 5,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_10_2",
+      "modelId": "10",
+      "colorName": "Pearl Iceberg White",
+      "colorHex": "#FFFEF7",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_11_1",
+      "modelId": "11",
+      "colorName": "Fighting Red",
+      "colorHex": "#DC143C",
+      "quantity": 4,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_11_2",
+      "modelId": "11",
+      "colorName": "Black",
+      "colorHex": "#000000",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_11_3",
+      "modelId": "11",
+      "colorName": "Aura Blue R",
+      "colorHex": "#1E3A8A",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_12_1",
+      "modelId": "12",
+      "colorName": "Ross White",
+      "colorHex": "#FFFFFF",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_13_1",
+      "modelId": "13",
+      "colorName": "Black",
+      "colorHex": "#000000",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_14_1",
+      "modelId": "14",
+      "colorName": "Matte Axis Gray Metallic",
+      "colorHex": "#6B7280",
+      "quantity": 4,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_14_2",
+      "modelId": "14",
+      "colorName": "Victory Red",
+      "colorHex": "#DC143C",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_15_1",
+      "modelId": "15",
+      "colorName": "Winning Red (Honda Tri-Color)",
+      "colorHex": "#DC143C",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_16_1",
+      "modelId": "16",
+      "colorName": "Matte Gunpowder Black Metallic",
+      "colorHex": "#2F3136",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_16_2",
+      "modelId": "16",
+      "colorName": "Matte Cosmo Silver Metallic",
+      "colorHex": "#8E9AAF",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_16_3",
+      "modelId": "16",
+      "colorName": "Matte Solar Red Metallic",
+      "colorHex": "#D32F2F",
+      "quantity": 1,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_17_1",
+      "modelId": "17",
+      "colorName": "Vortex Red Metallic",
+      "colorHex": "#B91C1C",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_17_2",
+      "modelId": "17",
+      "colorName": "Pearl Fadeless White",
+      "colorHex": "#FAFAFA",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_17_3",
+      "modelId": "17",
+      "colorName": "Matte Bullet Silver",
+      "colorHex": "#8C92AC",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_18_1",
+      "modelId": "18",
+      "colorName": "Matte Gunpowder Black Metallic",
+      "colorHex": "#2C2C2C",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_18_2",
+      "modelId": "18",
+      "colorName": "Pearl Fadeless White",
+      "colorHex": "#FAFAFA",
+      "quantity": 1,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_19_1",
+      "modelId": "19",
+      "colorName": "Matte Gunpowder Black Metallic",
+      "colorHex": "#2C2C2C",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_19_2",
+      "modelId": "19",
+      "colorName": "Matte Solar Red Metallic",
+      "colorHex": "#B91C1C",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_19_3",
+      "modelId": "19",
+      "colorName": "Matte Pearl Crater White",
+      "colorHex": "#F5F5F5",
+      "quantity": 1,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_20_1",
+      "modelId": "20",
+      "colorName": "Matte Gunpowder Black Metallic",
+      "colorHex": "#2C2C2C",
+      "quantity": 1,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_20_2",
+      "modelId": "20",
+      "colorName": "Moscato Red Metallic",
+      "colorHex": "#8B2635",
+      "quantity": 1,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_21_1",
+      "modelId": "21",
+      "colorName": "Pearl Iceberg White",
+      "colorHex": "#FFFEF7",
+      "quantity": 5,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_21_2",
+      "modelId": "21",
+      "colorName": "Infinity Red",
+      "colorHex": "#DC143C",
+      "quantity": 3,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_22_1",
+      "modelId": "22",
+      "colorName": "Matte Galaxy Black Metallic",
+      "colorHex": "#2C2C2C",
+      "quantity": 2,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_22_2",
+      "modelId": "22",
+      "colorName": "Matte Meteoric Red Metallic",
+      "colorHex": "#8B0000",
+      "quantity": 4,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "inv_23_1",
+      "modelId": "23",
+      "colorName": "Infinity Red",
+      "colorHex": "#DC143C",
+      "quantity": 1,
+      "isAvailable": true,
+      "lastUpdated": "2025-11-11T00:00:00.000Z"
+    }
+  ],
+  "promos": [
+    {
+      "id": "1",
+      "modelIds": [
+        "21",
+        "22",
+        "23"
+      ],
+      "title": "Honda Winner X Mega Promo",
+      "description": "FREE Registration + Xtreme Rice Cooker + Premium Helmet",
+      "freebies": [
+        "LTO Registration",
+        "Xtreme Rice Cooker",
+        "Premium Helmet"
+      ],
+      "startDate": "2025-11-03T00:00:00.000Z",
+      "endDate": "2025-12-31T00:00:00.000Z",
+      "isActive": true
+    },
+    {
+      "id": "2",
+      "modelIds": [
+        "15"
+      ],
+      "title": "CBR150R Racing Promo",
+      "description": "FREE Racing Jacket + Gloves",
+      "freebies": [
+        "Racing Jacket",
+        "Racing Gloves"
+      ],
+      "startDate": "2025-11-01T00:00:00.000Z",
+      "endDate": "2025-11-30T00:00:00.000Z",
+      "isActive": true
+    }
+  ]
 }

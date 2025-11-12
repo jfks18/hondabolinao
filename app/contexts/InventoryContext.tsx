@@ -11,6 +11,8 @@ interface InventoryContextType {
   isConnected: boolean;
   lastUpdate: Date | null;
   loading: boolean;
+  source: string; // 'api' | 'public' | 'sample'
+  loadPublicSeed: () => Promise<boolean>;
   updateInventory: (itemId: string, quantity: number) => Promise<void>;
   updateAvailability: (itemId: string, isAvailable: boolean) => Promise<void>;
   updatePromo: (promo: PromoData) => Promise<void>;
@@ -27,6 +29,7 @@ const InventoryContext = createContext<InventoryContextType | undefined>(undefin
 export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [promos, setPromos] = useState<PromoData[]>([]);
+  const [source, setSource] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,15 +104,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     loadInitialData();
   }, []);
 
-  // Persistence functions
-  const saveToLocalStorage = (inventory: InventoryItem[], promos: PromoData[]) => {
-    try {
-      localStorage.setItem('honda-inventory', JSON.stringify(inventory));
-      localStorage.setItem('honda-promos', JSON.stringify(promos));
-    } catch (error) {
-      console.error('Failed to save to localStorage:', error);
-    }
-  };
+  // (No localStorage persistence) - rely on API or public inventory.json only
 
   // Helpers: normalize payloads and fetch from API/public
   const normalizeServerPayload = (body: any) => {
@@ -201,7 +196,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       if (apiResult) {
         setInventory(apiResult.parsedInventory);
         setPromos(apiResult.parsedPromos);
-        saveToLocalStorage(apiResult.parsedInventory, apiResult.parsedPromos);
+        setSource('api');
         setLoading(false);
         return;
       }
@@ -211,37 +206,12 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       if (publicResult) {
         setInventory(publicResult.parsedInventory);
         setPromos(publicResult.parsedPromos);
-        saveToLocalStorage(publicResult.parsedInventory, publicResult.parsedPromos);
+        setSource('public');
         setLoading(false);
         return;
       }
 
-      // 3) Fallback to localStorage
-      const savedInventory = localStorage.getItem('honda-inventory');
-                  const savedPromos = localStorage.getItem('honda-promos');
-
-                  if (savedInventory && savedPromos) {
-                    try {
-                      const parsedInventory = JSON.parse(savedInventory).map((item: any) => ({
-                        ...item,
-                        lastUpdated: new Date(item.lastUpdated)
-                      }));
-                      const parsedPromos = JSON.parse(savedPromos).map((promo: any) => ({
-                        ...promo,
-                        startDate: new Date(promo.startDate),
-                        endDate: new Date(promo.endDate)
-                      }));
-
-                      setInventory(parsedInventory);
-                      setPromos(parsedPromos);
-                      setLoading(false);
-                      return;
-                    } catch (error) {
-                      console.error('Error parsing localStorage data:', error);
-                      localStorage.removeItem('honda-inventory');
-                      localStorage.removeItem('honda-promos');
-                    }
-                  }
+      // 3) Fallback to localStorage (removed) - we only use API or public seed
 
                   // 4) Last-resort: embedded sample data (keeps previous sample as fallback)
                   // (existing sample data below will be used)
@@ -271,9 +241,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   // Use an empty inventory as last-resort and keep the sample promos
   setInventory([]);
   setPromos(samplePromos);
-      
-  // Save initial data to localStorage
-  saveToLocalStorage([], samplePromos);
+  setSource('sample');
     } catch (error) {
       showNotification({
         message: 'Failed to load inventory data',
@@ -295,12 +263,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       };
 
       // Optimistic update
-      setInventory(prev => {
-        const newInventory = prev.map(i => i.id === itemId ? updatedItem : i);
-        // Save to localStorage immediately
-        saveToLocalStorage(newInventory, promos);
-        return newInventory;
-      });
+      setInventory(prev => prev.map(i => i.id === itemId ? updatedItem : i));
       
       try {
         // Persist to server DB (will broadcast to other clients)
@@ -343,11 +306,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       };
 
       // Optimistic update
-      setInventory(prev => {
-        const newInventory = prev.map(i => i.id === itemId ? updatedItem : i);
-        saveToLocalStorage(newInventory, promos);
-        return newInventory;
-      });
+      setInventory(prev => prev.map(i => i.id === itemId ? updatedItem : i));
 
       try {
         const apiBase = getApiBase();
@@ -372,11 +331,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   const updatePromo = async (promo: PromoData) => {
     const prevPromos = promos;
-    setPromos(prev => {
-      const newPromos = prev.map(p => p.id === promo.id ? promo : p);
-      saveToLocalStorage(inventory, newPromos);
-      return newPromos;
-    });
+    setPromos(prev => prev.map(p => p.id === promo.id ? promo : p));
 
     try {
       const apiBase = getApiBase();
@@ -404,11 +359,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       id: Date.now().toString() // Simple ID generation
     };
     const prevPromos = promos;
-    setPromos(prev => {
-      const newPromos = [...prev, newPromo];
-      saveToLocalStorage(inventory, newPromos);
-      return newPromos;
-    });
+    setPromos(prev => [...prev, newPromo]);
 
     try {
       const apiBase = getApiBase();
@@ -431,11 +382,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   const deletePromo = async (promoId: string) => {
     const prevPromos = promos;
-    setPromos(prev => {
-      const newPromos = prev.filter(p => p.id !== promoId);
-      saveToLocalStorage(inventory, newPromos);
-      return newPromos;
-    });
+    setPromos(prev => prev.filter(p => p.id !== promoId));
 
     try {
       const apiBase = getApiBase();
@@ -452,6 +399,17 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   const refreshData = async () => {
     await loadInitialData();
+  };
+
+  const loadPublicSeed = async () => {
+    const publicResult = await fetchFromPublic();
+    if (publicResult) {
+      setInventory(publicResult.parsedInventory);
+      setPromos(publicResult.parsedPromos);
+      setSource('public');
+      return true;
+    }
+    return false;
   };
 
   const getAvailableColors = (modelId: string) => {
@@ -482,6 +440,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       isConnected,
       lastUpdate,
       loading,
+      source,
       updateInventory,
       updateAvailability,
       updatePromo,
@@ -491,6 +450,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       getStockLevel,
       getActivePromos,
       refreshData
+      ,
+      loadPublicSeed
     }}>
       {children}
     </InventoryContext.Provider>
