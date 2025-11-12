@@ -121,251 +121,103 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Helpers: normalize payloads and fetch from API/public
+  const normalizeServerPayload = (body: any) => {
+    const serverInventory = Array.isArray(body) ? body : (body && body.inventory) || [];
+    const serverPromos = (body && !Array.isArray(body)) ? (body.promos || []) : [];
+
+    const parsedInventory = (serverInventory || []).map((item: any) => ({
+      ...item,
+      lastUpdated: item.lastUpdated ? new Date(item.lastUpdated) : new Date()
+    }));
+
+    const parsedPromos = (serverPromos || []).map((promo: any) => ({
+      ...promo,
+      startDate: promo.startDate ? new Date(promo.startDate) : new Date(),
+      endDate: promo.endDate ? new Date(promo.endDate) : new Date()
+    }));
+
+    return { parsedInventory, parsedPromos };
+  };
+
+  const fetchFromApi = async (apiBase: string) => {
+    if (!apiBase) return null;
+    try {
+      const res = await fetch(`${apiBase}/inventory`, { method: 'GET' });
+      if (!res.ok) return null;
+      const body = await res.json();
+      return normalizeServerPayload(body);
+    } catch (err) {
+      console.warn('Failed to fetch inventory from API:', err);
+      return null;
+    }
+  };
+
+  const fetchFromPublic = async () => {
+    try {
+      const res = await fetch('/inventory.json');
+      if (!res.ok) return null;
+      const body = await res.json();
+      return normalizeServerPayload(body);
+    } catch (err) {
+      return null;
+    }
+  };
+
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      // Attempt to load inventory from the server API (preferred)
-  const apiBase = getApiBase();
+      const apiBase = getApiBase();
 
-      if (apiBase) {
-        try {
-          const res = await fetch(`${apiBase}/inventory`, { method: 'GET' });
-          if (res.ok) {
-            const body = await res.json();
-            // server may return { inventory: [...], promos: [...] } or an array
-            const serverInventory = Array.isArray(body) ? body : body.inventory || [];
-            const serverPromos = (body && !Array.isArray(body)) ? (body.promos || []) : [];
-
-            // Normalize inventory dates
-            const parsedInventory = (serverInventory || []).map((item: any) => ({
-              ...item,
-              lastUpdated: item.lastUpdated ? new Date(item.lastUpdated) : new Date()
-            }));
-
-            // Normalize promos dates
-            const parsedPromos = (serverPromos || []).map((promo: any) => ({
-              ...promo,
-              startDate: promo.startDate ? new Date(promo.startDate) : new Date(),
-              endDate: promo.endDate ? new Date(promo.endDate) : new Date()
-            }));
-
-            setInventory(parsedInventory);
-            setPromos(parsedPromos);
-            // Cache locally
-            saveToLocalStorage(parsedInventory, parsedPromos);
-            setLoading(false);
-            return;
-          }
-        } catch (err) {
-          console.warn('⚠️ Failed to fetch inventory from server, falling back to cache/sample:', err);
-        }
+      // 1) Prefer API (server reads disk-backed JSON DB)
+      const apiResult = await fetchFromApi(apiBase);
+      if (apiResult) {
+        setInventory(apiResult.parsedInventory);
+        setPromos(apiResult.parsedPromos);
+        saveToLocalStorage(apiResult.parsedInventory, apiResult.parsedPromos);
+        setLoading(false);
+        return;
       }
 
-      // If no API base is configured or the API call failed, try to fetch the static seed in public/
-      try {
-        const publicRes = await fetch('/inventory.json');
-        if (publicRes.ok) {
-          const publicBody = await publicRes.json();
-          const pubInventory = publicBody.inventory || [];
-          const pubPromos = publicBody.promos || [];
-
-          const parsedInventory = (pubInventory || []).map((item: any) => ({
-            ...item,
-            lastUpdated: item.lastUpdated ? new Date(item.lastUpdated) : new Date()
-          }));
-
-          const parsedPromos = (pubPromos || []).map((promo: any) => ({
-            ...promo,
-            startDate: promo.startDate ? new Date(promo.startDate) : new Date(),
-            endDate: promo.endDate ? new Date(promo.endDate) : new Date()
-          }));
-
-          setInventory(parsedInventory);
-          setPromos(parsedPromos);
-          saveToLocalStorage(parsedInventory, parsedPromos);
-          setLoading(false);
-          return;
-        }
-      } catch (err) {
-        // ignore - we'll fall back to localStorage or sample data below
+      // 2) Fallback to public seed
+      const publicResult = await fetchFromPublic();
+      if (publicResult) {
+        setInventory(publicResult.parsedInventory);
+        setPromos(publicResult.parsedPromos);
+        saveToLocalStorage(publicResult.parsedInventory, publicResult.parsedPromos);
+        setLoading(false);
+        return;
       }
 
-      // Try to load from localStorage as fallback
+      // 3) Fallback to localStorage
       const savedInventory = localStorage.getItem('honda-inventory');
-      const savedPromos = localStorage.getItem('honda-promos');
+                  const savedPromos = localStorage.getItem('honda-promos');
 
-      if (savedInventory && savedPromos) {
-        try {
-          const parsedInventory = JSON.parse(savedInventory).map((item: any) => ({
-            ...item,
-            lastUpdated: new Date(item.lastUpdated)
-          }));
-          const parsedPromos = JSON.parse(savedPromos).map((promo: any) => ({
-            ...promo,
-            startDate: new Date(promo.startDate),
-            endDate: new Date(promo.endDate)
-          }));
+                  if (savedInventory && savedPromos) {
+                    try {
+                      const parsedInventory = JSON.parse(savedInventory).map((item: any) => ({
+                        ...item,
+                        lastUpdated: new Date(item.lastUpdated)
+                      }));
+                      const parsedPromos = JSON.parse(savedPromos).map((promo: any) => ({
+                        ...promo,
+                        startDate: new Date(promo.startDate),
+                        endDate: new Date(promo.endDate)
+                      }));
 
-          const hasInvalidClick160 = parsedInventory.some((item: any) => 
-            item.modelId === '16' && item.colorName === 'Pearl Organic Green'
-          );
+                      setInventory(parsedInventory);
+                      setPromos(parsedPromos);
+                      setLoading(false);
+                      return;
+                    } catch (error) {
+                      console.error('Error parsing localStorage data:', error);
+                      localStorage.removeItem('honda-inventory');
+                      localStorage.removeItem('honda-promos');
+                    }
+                  }
 
-          if (!hasInvalidClick160) {
-            setInventory(parsedInventory);
-            setPromos(parsedPromos);
-            setLoading(false);
-            return;
-          }
-          // otherwise fallthrough to sample data
-        } catch (error) {
-          console.error('Error parsing localStorage data:', error);
-          localStorage.removeItem('honda-inventory');
-          localStorage.removeItem('honda-promos');
-        }
-      }
-
-      // If no saved data, try to load from the repository data file first (data/inventory.json).
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      try {
-        // Dynamic import so this only runs in the client when needed.
-        // The repo's `data/inventory.json` isn't served from /public by default, but importing here
-        // allows using the same JSON contents as the sample data.
-        // Use a dynamic import to avoid bundling it unnecessarily during server builds.
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const staticData = await import('../../data/inventory.json');
-        const fileInventory = (staticData && (staticData.inventory || staticData.default?.inventory)) || staticData.default || [];
-
-        if (Array.isArray(fileInventory) && fileInventory.length > 0) {
-          const parsedInventory = fileInventory.map((item: any) => ({
-            ...item,
-            lastUpdated: item.lastUpdated ? new Date(item.lastUpdated) : new Date()
-          }));
-
-          const filePromosRaw = (staticData && (staticData.promos || staticData.default?.promos)) || [];
-          const parsedPromos = (filePromosRaw || []).map((promo: any) => ({
-            ...promo,
-            startDate: promo.startDate ? new Date(promo.startDate) : new Date(),
-            endDate: promo.endDate ? new Date(promo.endDate) : new Date()
-          }));
-
-          setInventory(parsedInventory);
-          setPromos(parsedPromos);
-          setLoading(false);
-          return;
-        }
-      } catch (err) {
-        // If import fails (file missing or not resolvable), fall back to embedded sample data below
-        // console.debug('No local data file available, using embedded sample data.', err);
-      }
-
-      // If no saved data or static file, load embedded sample data
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const sampleInventory: InventoryItem[] = [
-        // Honda NAVi (ID: 1)
-        { id: 'inv_1_1', modelId: '1', colorName: 'Shasta White', colorHex: '#F8F8FF', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_1_2', modelId: '1', colorName: 'Patriot Red', colorHex: '#DC143C', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_1_3', modelId: '1', colorName: 'Black', colorHex: '#1C1C1C', quantity: 4, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_1_4', modelId: '1', colorName: 'Ranger Green R', colorHex: '#355E3B', quantity: 1, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda BeAT Playful (ID: 2)
-        { id: 'inv_2_1', modelId: '2', colorName: 'Fighting Red', colorHex: '#DC143C', quantity: 5, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_2_2', modelId: '2', colorName: 'Pearl Sylvestris Gray', colorHex: '#708090', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_2_3', modelId: '2', colorName: 'Pearl Tourmaline Purple', colorHex: '#9966CC', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda BeAT Premium (ID: 3)
-        { id: 'inv_3_1', modelId: '3', colorName: 'Matte Axis Gray Metallic', colorHex: '#708090', quantity: 4, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_3_2', modelId: '3', colorName: 'Pearl Arctic White', colorHex: '#F8F8FF', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_3_3', modelId: '3', colorName: 'Matte Summit Silver Metallic', colorHex: '#C0C0C0', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda CLICK125 (ID: 4)
-        { id: 'inv_4_1', modelId: '4', colorName: 'Pearl Arctic White', colorHex: '#F8F8FF', quantity: 6, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_4_2', modelId: '4', colorName: 'Pearl Sylvestris Gray', colorHex: '#708090', quantity: 4, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_4_3', modelId: '4', colorName: 'Stellar Blue Metallic', colorHex: '#4682B4', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_4_4', modelId: '4', colorName: 'Obsidian Black Metallic', colorHex: '#1C1C1C', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda CLICK125 Special Edition (ID: 5)
-        { id: 'inv_5_1', modelId: '5', colorName: 'Obsidian Black Metallic', colorHex: '#1C1C1C', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_5_2', modelId: '5', colorName: 'Pearl Arctic White', colorHex: '#F8F8FF', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_5_3', modelId: '5', colorName: 'Pearl Crimson Red', colorHex: '#DC143C', quantity: 1, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda Giorno+ (ID: 6)
-        { id: 'inv_6_1', modelId: '6', colorName: 'Virgin Beige', colorHex: '#F5E6D3', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_6_2', modelId: '6', colorName: 'Matte Gunpowder Black Metallic', colorHex: '#2C2C2C', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_6_3', modelId: '6', colorName: 'Pearl Jubilee White', colorHex: '#F8F8FF', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_6_4', modelId: '6', colorName: 'Piquant Orange', colorHex: '#FF6B35', quantity: 1, isAvailable: true, lastUpdated: new Date() },
-
-        // TMX125 Alpha (ID: 7)
-        { id: 'inv_7_1', modelId: '7', colorName: 'Force Silver Metallic', colorHex: '#A8A8A8', quantity: 5, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_7_2', modelId: '7', colorName: 'Pearl Nightstar Black', colorHex: '#1C1C1C', quantity: 4, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_7_3', modelId: '7', colorName: 'Candy Luster Red', colorHex: '#DC143C', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-
-        // TMX SUPREMO (ID: 8)
-        { id: 'inv_8_1', modelId: '8', colorName: 'Black', colorHex: '#000000', quantity: 4, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_8_2', modelId: '8', colorName: 'Candy Ruby Red', colorHex: '#DC143C', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda Wave RSX Drum (ID: 9)
-        { id: 'inv_9_1', modelId: '9', colorName: 'Infinity Red', colorHex: '#DC143C', quantity: 6, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_9_2', modelId: '9', colorName: 'Poseidon Black Metallic', colorHex: '#1C1C1C', quantity: 4, isAvailable: true, lastUpdated: new Date() },
-
-        // Wave RSX DISC (ID: 10)
-        { id: 'inv_10_1', modelId: '10', colorName: 'Matte Galaxy Black Metallic', colorHex: '#2C2C2C', quantity: 5, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_10_2', modelId: '10', colorName: 'Pearl Iceberg White', colorHex: '#FFFEF7', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda XRM125 DS (ID: 11)
-        { id: 'inv_11_1', modelId: '11', colorName: 'Fighting Red', colorHex: '#DC143C', quantity: 4, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_11_2', modelId: '11', colorName: 'Black', colorHex: '#000000', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_11_3', modelId: '11', colorName: 'Aura Blue R', colorHex: '#1E3A8A', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda XRM125 DSX (ID: 12)
-        { id: 'inv_12_1', modelId: '12', colorName: 'Ross White', colorHex: '#FFFFFF', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda XRM125 MOTARD (ID: 13)
-        { id: 'inv_13_1', modelId: '13', colorName: 'Black', colorHex: '#000000', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda RS125 (ID: 14)
-        { id: 'inv_14_1', modelId: '14', colorName: 'Matte Axis Gray Metallic', colorHex: '#6B7280', quantity: 4, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_14_2', modelId: '14', colorName: 'Victory Red', colorHex: '#DC143C', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda CBR150R (ID: 15)
-        { id: 'inv_15_1', modelId: '15', colorName: 'Winning Red (Honda Tri-Color)', colorHex: '#DC143C', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda CLICK160 (ID: 16)
-        { id: 'inv_16_1', modelId: '16', colorName: 'Matte Gunpowder Black Metallic', colorHex: '#2F3136', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_16_2', modelId: '16', colorName: 'Matte Cosmo Silver Metallic', colorHex: '#8E9AAF', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_16_3', modelId: '16', colorName: 'Matte Solar Red Metallic', colorHex: '#D32F2F', quantity: 1, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda PCX160 Standard (ID: 17)
-        { id: 'inv_17_1', modelId: '17', colorName: 'Vortex Red Metallic', colorHex: '#B91C1C', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_17_2', modelId: '17', colorName: 'Pearl Fadeless White', colorHex: '#FAFAFA', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_17_3', modelId: '17', colorName: 'Matte Bullet Silver', colorHex: '#8C92AC', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda PCX160 RoadSync (ID: 18)
-        { id: 'inv_18_1', modelId: '18', colorName: 'Matte Gunpowder Black Metallic', colorHex: '#2C2C2C', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_18_2', modelId: '18', colorName: 'Pearl Fadeless White', colorHex: '#FAFAFA', quantity: 1, isAvailable: true, lastUpdated: new Date() },
-
-        // ADV160 (ID: 19)
-        { id: 'inv_19_1', modelId: '19', colorName: 'Matte Gunpowder Black Metallic', colorHex: '#2C2C2C', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_19_2', modelId: '19', colorName: 'Matte Solar Red Metallic', colorHex: '#B91C1C', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_19_3', modelId: '19', colorName: 'Matte Pearl Crater White', colorHex: '#F5F5F5', quantity: 1, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda ADV350 (ID: 20)
-        { id: 'inv_20_1', modelId: '20', colorName: 'Matte Gunpowder Black Metallic', colorHex: '#2C2C2C', quantity: 1, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_20_2', modelId: '20', colorName: 'Moscato Red Metallic', colorHex: '#8B2635', quantity: 1, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda Winner X Standard (ID: 21)
-        { id: 'inv_21_1', modelId: '21', colorName: 'Pearl Iceberg White', colorHex: '#FFFEF7', quantity: 5, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_21_2', modelId: '21', colorName: 'Infinity Red', colorHex: '#DC143C', quantity: 3, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda Winner X ABS Premium (ID: 22)
-        { id: 'inv_22_1', modelId: '22', colorName: 'Matte Galaxy Black Metallic', colorHex: '#2C2C2C', quantity: 2, isAvailable: true, lastUpdated: new Date() },
-        { id: 'inv_22_2', modelId: '22', colorName: 'Matte Meteoric Red Metallic', colorHex: '#8B0000', quantity: 4, isAvailable: true, lastUpdated: new Date() },
-
-        // Honda Winner X ABS Racing Type (ID: 23)
-        { id: 'inv_23_1', modelId: '23', colorName: 'Infinity Red', colorHex: '#DC143C', quantity: 1, isAvailable: true, lastUpdated: new Date() }
-      ];
-
+                  // 4) Last-resort: embedded sample data (keeps previous sample as fallback)
+                  // (existing sample data below will be used)
       const samplePromos: PromoData[] = [
         {
           id: '1',
@@ -389,11 +241,12 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         }
       ];
 
-      setInventory(sampleInventory);
-      setPromos(samplePromos);
+  // Use an empty inventory as last-resort and keep the sample promos
+  setInventory([]);
+  setPromos(samplePromos);
       
-      // Save initial data to localStorage
-      saveToLocalStorage(sampleInventory, samplePromos);
+  // Save initial data to localStorage
+  saveToLocalStorage([], samplePromos);
     } catch (error) {
       showNotification({
         message: 'Failed to load inventory data',
