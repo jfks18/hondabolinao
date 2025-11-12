@@ -131,17 +131,53 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   };
 
   const fetchFromApi = async (apiBase: string) => {
-    // Try same-origin API if apiBase is not provided.
-    const base = apiBase || '';
-    try {
-      const res = await fetch(`${base}/api/inventory`, { method: 'GET' });
-      if (!res.ok) return null;
-      const body = await res.json();
-      return normalizeServerPayload(body);
-    } catch (err) {
-      console.warn('Failed to fetch inventory from API:', err);
-      return null;
+    // Try a few possible endpoints so this works whether `apiBase` points to
+    // the Next.js server (which exposes /api/inventory) or the standalone
+    // realtime server (which exposes /inventory).
+    const base = apiBase ? apiBase.replace(/\/$/, '') : '';
+    const candidates = [] as string[];
+    if (base) {
+      candidates.push(`${base}/inventory`);
+      candidates.push(`${base}/api/inventory`);
     }
+    // also try same-origin paths
+    candidates.push(`/api/inventory`);
+    candidates.push(`/inventory`);
+
+    for (const url of candidates) {
+      try {
+        const res = await fetch(url, { method: 'GET' });
+        if (!res) continue;
+        if (res.status === 404) continue;
+        if (!res.ok) return null;
+        const body = await res.json();
+        return normalizeServerPayload(body);
+      } catch (err) {
+        // try next candidate
+        continue;
+      }
+    }
+    return null;
+  };
+
+  // Helper to try multiple endpoints for write operations (POST/PUT/DELETE)
+  const tryEndpoints = async (method: string, candidateUrls: string[], body?: any) => {
+    for (const url of candidateUrls) {
+      try {
+        const opts: any = { method };
+        if (body !== undefined) {
+          opts.headers = { 'Content-Type': 'application/json' };
+          opts.body = JSON.stringify(body);
+        }
+        const res = await fetch(url, opts);
+        if (!res) continue;
+        if (res.status === 404) continue;
+        return res;
+      } catch (err) {
+        continue;
+      }
+    }
+    return null;
   };
 
   const fetchFromPublic = async () => {
@@ -268,20 +304,23 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       
       try {
         // Persist to server DB (will broadcast to other clients)
-  const apiBase = getApiBase();
-        if (apiBase) {
-          const base = apiBase.replace(/\/$/, '');
-          const res = await fetch(`${base}/api/inventory`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedItem)
-          });
-          if (!res.ok) throw new Error('Server failed to persist inventory');
-        } else {
-          // If no API base, fallback to broadcasting only
-          realtimeService.broadcast('inventory', updatedItem);
+        const apiBase = getApiBase();
+        const base = apiBase ? apiBase.replace(/\/$/, '') : '';
+        const candidates = [] as string[];
+        if (base) {
+          candidates.push(`${base}/api/inventory`);
+          candidates.push(`${base}/inventory`);
         }
-        
+        candidates.push(`/api/inventory`);
+        candidates.push(`/inventory`);
+
+        const res = await tryEndpoints('POST', candidates, updatedItem);
+        if (!res) {
+          // If no API responded, fallback to broadcasting only
+          realtimeService.broadcast('inventory', updatedItem);
+        } else if (!res.ok) {
+          throw new Error('Server failed to persist inventory');
+        }
       } catch (error) {
         console.error('Failed to save inventory update:', error);
         // Revert optimistic update on error
@@ -312,13 +351,17 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const apiBase = getApiBase();
-        const base = apiBase || '';
-        const res = await fetch(`${base}/api/inventory`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedItem)
-        });
-        if (!res.ok) throw new Error('Server failed to persist availability change');
+        const base = apiBase ? apiBase.replace(/\/$/, '') : '';
+        const candidates = [] as string[];
+        if (base) {
+          candidates.push(`${base}/api/inventory`);
+          candidates.push(`${base}/inventory`);
+        }
+        candidates.push(`/api/inventory`);
+        candidates.push(`/inventory`);
+
+        const res = await tryEndpoints('POST', candidates, updatedItem);
+        if (!res || !res.ok) throw new Error('Server failed to persist availability change');
       } catch (err) {
         console.error('Failed to persist availability change:', err);
         // Revert on error
@@ -337,13 +380,17 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const apiBase = getApiBase();
-      const base = apiBase || '';
-      const res = await fetch(`${base}/api/promo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(promo)
-      });
-      if (!res.ok) throw new Error('Failed to persist promo');
+      const base = apiBase ? apiBase.replace(/\/$/, '') : '';
+      const candidates: string[] = [];
+      if (base) {
+        candidates.push(`${base}/api/promo`);
+        candidates.push(`${base}/promo`);
+      }
+      candidates.push(`/api/promo`);
+      candidates.push(`/promo`);
+
+      const res = await tryEndpoints('POST', candidates, promo);
+      if (!res || !res.ok) throw new Error('Failed to persist promo');
     } catch (err) {
       console.error('Failed to persist promo update:', err);
       // revert
@@ -365,13 +412,17 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const apiBase = getApiBase();
-      const base = apiBase || '';
-      const res = await fetch(`${base}/api/promo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPromo)
-      });
-      if (!res.ok) throw new Error('Failed to persist new promo');
+      const base = apiBase ? apiBase.replace(/\/$/, '') : '';
+      const candidates: string[] = [];
+      if (base) {
+        candidates.push(`${base}/api/promo`);
+        candidates.push(`${base}/promo`);
+      }
+      candidates.push(`/api/promo`);
+      candidates.push(`/promo`);
+
+      const res = await tryEndpoints('POST', candidates, newPromo);
+      if (!res || !res.ok) throw new Error('Failed to persist new promo');
     } catch (err) {
       console.error('Failed to persist new promo:', err);
       setPromos(prevPromos);
