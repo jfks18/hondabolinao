@@ -40,21 +40,20 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     return wsUrl.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:').replace(/\/$/, '');
   };
 
-  // Real-time inventory updates
-  const handleInventoryUpdate = useCallback((data: InventoryItem) => {
+  // Real-time inventory updates (from the websocket/realtime service)
+  const handleInventoryUpdate = useCallback(async (data: InventoryItem) => {
     setInventory(prev => {
       const index = prev.findIndex(item => item.id === data.id);
+      const normalized = { ...data, lastUpdated: data.lastUpdated ? new Date(data.lastUpdated) : new Date() } as InventoryItem;
       if (index >= 0) {
         const newInventory = [...prev];
-        newInventory[index] = { ...data, lastUpdated: new Date(data.lastUpdated) };
+        newInventory[index] = normalized;
         return newInventory;
       } else {
-        return [...prev, { ...data, lastUpdated: new Date(data.lastUpdated) }];
+        return [...prev, normalized];
       }
     });
     setLastUpdate(new Date());
-    
-    // Show notification
     showNotification({
       message: `📦 ${data.colorName} stock updated: ${data.quantity} units`,
       type: 'success'
@@ -62,31 +61,22 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Real-time promo updates
-  const handlePromoUpdate = useCallback((data: PromoData) => {
+  const handlePromoUpdate = useCallback((promo: PromoData) => {
     setPromos(prev => {
-      const index = prev.findIndex(promo => promo.id === data.id);
-      if (index >= 0) {
+      const idx = prev.findIndex(p => p.id === promo.id);
+      const normalized = {
+        ...promo,
+        startDate: promo.startDate ? new Date(promo.startDate) : new Date(),
+        endDate: promo.endDate ? new Date(promo.endDate) : new Date()
+      } as PromoData;
+      if (idx >= 0) {
         const newPromos = [...prev];
-        newPromos[index] = {
-          ...data,
-          startDate: new Date(data.startDate),
-          endDate: new Date(data.endDate)
-        };
+        newPromos[idx] = normalized;
         return newPromos;
-      } else {
-        return [...prev, {
-          ...data,
-          startDate: new Date(data.startDate),
-          endDate: new Date(data.endDate)
-        }];
       }
+      return [...prev, normalized];
     });
-    setLastUpdate(new Date());
-    
-    showNotification({
-      message: `🎯 Promo updated: ${data.title}`,
-      type: 'info'
-    });
+    showNotification({ message: `🎯 Promo updated: ${promo.title}`, type: 'info' });
   }, []);
 
   // Setup real-time subscriptions
@@ -141,9 +131,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   };
 
   const fetchFromApi = async (apiBase: string) => {
-    if (!apiBase) return null;
+    // Try same-origin API if apiBase is not provided.
+    const base = apiBase || '';
     try {
-      const res = await fetch(`${apiBase}/inventory`, { method: 'GET' });
+      const res = await fetch(`${base}/api/inventory`, { method: 'GET' });
       if (!res.ok) return null;
       const body = await res.json();
       return normalizeServerPayload(body);
@@ -279,7 +270,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         // Persist to server DB (will broadcast to other clients)
   const apiBase = getApiBase();
         if (apiBase) {
-          const res = await fetch(`${apiBase}/inventory`, {
+          const base = apiBase.replace(/\/$/, '');
+          const res = await fetch(`${base}/api/inventory`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedItem)
@@ -319,17 +311,14 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       });
 
       try {
-  const apiBase = getApiBase();
-        if (apiBase) {
-          const res = await fetch(`${apiBase}/inventory`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedItem)
-          });
-          if (!res.ok) throw new Error('Server failed to persist availability change');
-        } else {
-          realtimeService.broadcast('inventory', updatedItem);
-        }
+        const apiBase = getApiBase();
+        const base = apiBase || '';
+        const res = await fetch(`${base}/api/inventory`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedItem)
+        });
+        if (!res.ok) throw new Error('Server failed to persist availability change');
       } catch (err) {
         console.error('Failed to persist availability change:', err);
         // Revert on error
@@ -347,17 +336,14 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     });
 
     try {
-  const apiBase = getApiBase();
-      if (apiBase) {
-        const res = await fetch(`${apiBase}/promo`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(promo)
-        });
-        if (!res.ok) throw new Error('Failed to persist promo');
-      } else {
-        realtimeService.broadcast('promo', promo);
-      }
+      const apiBase = getApiBase();
+      const base = apiBase || '';
+      const res = await fetch(`${base}/api/promo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(promo)
+      });
+      if (!res.ok) throw new Error('Failed to persist promo');
     } catch (err) {
       console.error('Failed to persist promo update:', err);
       // revert
@@ -378,17 +364,14 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     });
 
     try {
-  const apiBase = getApiBase();
-      if (apiBase) {
-        const res = await fetch(`${apiBase}/promo`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newPromo)
-        });
-        if (!res.ok) throw new Error('Failed to persist new promo');
-      } else {
-        realtimeService.broadcast('promo', newPromo);
-      }
+      const apiBase = getApiBase();
+      const base = apiBase || '';
+      const res = await fetch(`${base}/api/promo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPromo)
+      });
+      if (!res.ok) throw new Error('Failed to persist new promo');
     } catch (err) {
       console.error('Failed to persist new promo:', err);
       setPromos(prevPromos);
@@ -404,15 +387,12 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     });
 
     try {
-  const apiBase = getApiBase();
-      if (apiBase) {
-        const res = await fetch(`${apiBase}/promo?id=${encodeURIComponent(promoId)}`, {
-          method: 'DELETE'
-        });
-        if (!res.ok) throw new Error('Failed to delete promo');
-      } else {
-        realtimeService.broadcast('promo', { id: promoId, deleted: true });
-      }
+      const apiBase = getApiBase();
+      const base = apiBase || '';
+      const res = await fetch(`${base}/api/promo?id=${encodeURIComponent(promoId)}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error('Failed to delete promo');
     } catch (err) {
       console.error('Failed to delete promo:', err);
       setPromos(prevPromos);
