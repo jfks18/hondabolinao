@@ -20,7 +20,7 @@ export default function Home() {
   };
 
   // Show a quick overview of available colors site-wide (from inventory)
-  const { inventory } = useInventory();
+  const { inventory, loading, source } = useInventory();
 
   const availableColorsMap = inventory
     .filter(i => i.isAvailable && i.quantity > 0)
@@ -66,6 +66,40 @@ export default function Home() {
         {/* Main Content */}
         <div className="relative z-10">
           <Header />
+          
+          {/* Data Loading Status */}
+          {loading && (
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mx-4 mb-4 rounded">
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-3"></div>
+                <p className="text-blue-700">Loading inventory data...</p>
+              </div>
+            </div>
+          )}
+          
+          {!loading && source && (
+            <div className={`border-l-4 p-3 mx-4 mb-4 rounded text-sm ${
+              source === 'api' ? 'bg-green-50 border-green-500 text-green-700' : 
+              source === 'public' ? 'bg-yellow-50 border-yellow-500 text-yellow-700' :
+              'bg-gray-50 border-gray-500 text-gray-700'
+            }`}>
+              <div className="flex items-center justify-between">
+                <span>
+                  📊 Data source: {
+                    source === 'api' ? 'Live API (Real-time updates available)' :
+                    source === 'public' ? 'Static inventory.json (Updates may be delayed)' :
+                    'Sample data (No real inventory)'
+                  }
+                </span>
+                {availableColors.length > 0 && (
+                  <span className="text-xs">
+                    {availableColors.reduce((sum, color) => sum + color.quantity, 0)} units available
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
           <main>
             <HeroSection />
             <ProductGrid 

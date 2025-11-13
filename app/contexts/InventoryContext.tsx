@@ -92,12 +92,21 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       setIsConnected(realtimeService.isConnected());
     }, 1000);
 
+    // Periodic data refresh (every 5 minutes) to ensure data consistency
+    const periodicRefresh = setInterval(() => {
+      if (!loading && source === 'api') {
+        console.log('🔄 Periodic data refresh...');
+        loadInitialData();
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
     return () => {
       unsubscribeInventory();
       unsubscribePromo();
       clearInterval(checkConnection);
+      clearInterval(periodicRefresh);
     };
-  }, [handleInventoryUpdate, handlePromoUpdate]);
+  }, [handleInventoryUpdate, handlePromoUpdate, loading, source]);
 
   // Load initial data
   useEffect(() => {
@@ -141,13 +150,24 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
     for (const url of candidates) {
       try {
-        const res = await fetch(url, { method: 'GET' });
+        // Add cache-busting and better headers for reliability
+        const res = await fetch(url, { 
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          // Add timestamp to bust cache
+          cache: 'no-store'
+        });
         if (!res) continue;
         if (res.status === 404) continue;
         if (!res.ok) return null;
         const body = await res.json();
         return normalizeServerPayload(body);
       } catch (err) {
+        console.warn(`Failed to fetch from ${url}:`, err);
         // try next candidate
         continue;
       }
@@ -177,37 +197,62 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   const fetchFromPublic = async () => {
     try {
-      const res = await fetch('/inventory.json');
+      // Add cache-busting for public inventory.json
+      const timestamp = Date.now();
+      const res = await fetch(`/inventory.json?t=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        },
+        cache: 'no-store'
+      });
       if (!res.ok) return null;
       const body = await res.json();
       return normalizeServerPayload(body);
     } catch (err) {
+      console.warn('Failed to fetch from /inventory.json:', err);
       return null;
     }
   };
 
-  const loadInitialData = async () => {
+  const loadInitialData = async (retryCount = 0) => {
     setLoading(true);
     try {
       const apiBase = getApiBase();
 
-      // 1) Prefer API (server reads disk-backed JSON DB)
-      const apiResult = await fetchFromApi(apiBase);
+      // 1) Prefer API (server reads disk-backed JSON DB) with retry logic
+      let apiResult = null;
+      const maxRetries = 3;
+      const retryDelay = 1000; // 1 second
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        apiResult = await fetchFromApi(apiBase);
+        if (apiResult) break;
+        
+        if (attempt < maxRetries) {
+          console.warn(`API fetch attempt ${attempt + 1} failed, retrying in ${retryDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay * (attempt + 1)));
+        }
+      }
+
       if (apiResult) {
         setInventory(apiResult.parsedInventory);
         setPromos(apiResult.parsedPromos);
         setSource('api');
         setLoading(false);
+        console.log('✅ Successfully loaded data from API');
         return;
       }
 
       // 2) Fallback to public seed
+      console.warn('⚠️ API failed, falling back to public inventory.json');
       const publicResult = await fetchFromPublic();
       if (publicResult) {
         setInventory(publicResult.parsedInventory);
         setPromos(publicResult.parsedPromos);
         setSource('public');
         setLoading(false);
+        console.log('✅ Successfully loaded data from public/inventory.json');
         return;
       }
 
@@ -398,6 +443,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshData = async () => {
+    console.log('🔄 Refreshing inventory data...');
     await loadInitialData();
   };
 

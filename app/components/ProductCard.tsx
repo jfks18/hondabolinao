@@ -18,6 +18,7 @@ export interface Product {
     name: string;
     hex: string;
     image?: string;
+    stock?: number;
   }[];
   specifications?: {
     engine?: string;
@@ -26,6 +27,11 @@ export interface Product {
     transmission?: string;
     brakes?: string;
     tires?: string;
+  };
+  stockInfo?: {
+    totalStock: number;
+    availableColors: number;
+    isAvailable: boolean;
   };
 }
 

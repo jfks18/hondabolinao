@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import ProductCard, { Product } from './ProductCard';
 import { useCart } from './CartContext';
+import { useInventory } from '../contexts/InventoryContext';
 
 const sampleProducts: Product[] = [
   // Scooters
@@ -570,9 +571,101 @@ interface ProductGridProps {
 
 export default function ProductGrid({ onAddToWishlist }: ProductGridProps) {
   const { addItem } = useCart();
+  const { inventory, loading: inventoryLoading, source } = useInventory();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('featured');
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'colors'>('grid');
+
+  // Motorcycle model names mapping
+  const motorcycleNames: { [key: string]: string } = {
+    '1': 'Honda NAVi',
+    '2': 'Honda BeAT (Playful)', 
+    '3': 'Honda BeAT (Premium)',
+    '4': 'Honda CLICK125',
+    '5': 'Honda CLICK125 (Special Edition)',
+    '6': 'Honda Giorno+',
+    '7': 'TMX125 Alpha',
+    '8': 'TMX SUPREMO',
+    '9': 'Honda Wave RSX (Drum)',
+    '10': 'Wave RSX (DISC)',
+    '11': 'Honda XRM125 DS',
+    '12': 'Honda XRM125 DSX',
+    '13': 'Honda XRM125 MOTARD',
+    '14': 'Honda RS125',
+    '15': 'Honda CBR150R',
+    '16': 'Honda CLICK160',
+    '17': 'Honda PCX160 (Standard Type)',
+    '18': 'Honda PCX160 (RoadSync)',
+    '19': 'ADV160',
+    '20': 'Honda ADV350',
+    '21': 'Honda Winner X (Standard)',
+    '22': 'Honda Winner X (ABS Premium)',
+    '23': 'Honda Winner X (ABS Racing Type)'
+  };
+
+  // Convert inventory data to Product format
+  const realProducts = useMemo(() => {
+    const productMap = new Map<string, Product>();
+
+    inventory.forEach(item => {
+      const modelId = item.modelId;
+      const productName = motorcycleNames[modelId] || `Honda Model ${modelId}`;
+      
+      if (!productMap.has(modelId)) {
+        // Find the sample product for this model to get additional info
+        const sampleProduct = sampleProducts.find(p => p.id === modelId);
+        
+        productMap.set(modelId, {
+          id: modelId,
+          name: productName,
+          price: sampleProduct?.price || 0,
+          rating: sampleProduct?.rating || 4.5,
+          reviews: sampleProduct?.reviews || 0,
+          isNew: sampleProduct?.isNew || false,
+          isOnSale: sampleProduct?.isOnSale || false,
+          category: sampleProduct?.category || 'Motorcycles',
+          image: sampleProduct?.image || 'https://via.placeholder.com/400x300',
+          colors: [],
+          specifications: sampleProduct?.specifications || {},
+          stockInfo: {
+            totalStock: 0,
+            availableColors: 0,
+            isAvailable: false
+          }
+        });
+      }
+
+      const product = productMap.get(modelId)!;
+      
+      // Add color if available and in stock
+      if (item.isAvailable && item.quantity > 0) {
+        // Ensure colors array is initialized
+        if (!product.colors) {
+          product.colors = [];
+        }
+        const existingColor = product.colors.find(c => c.name === item.colorName);
+        if (!existingColor) {
+          product.colors.push({
+            name: item.colorName,
+            hex: item.colorHex,
+            stock: item.quantity
+          });
+        }
+      }
+      
+      // Update stock info
+      product.stockInfo!.totalStock += item.quantity;
+      product.stockInfo!.availableColors = product.colors?.length || 0;
+      product.stockInfo!.isAvailable = product.stockInfo!.totalStock > 0;
+    });
+
+    return Array.from(productMap.values()).filter(product => 
+      product.stockInfo!.isAvailable && (product.colors?.length || 0) > 0
+    );
+  }, [inventory]);
+
+  // Use real products if available, otherwise fallback to sample
+  const products = realProducts.length > 0 ? realProducts : sampleProducts;
 
   // Group products by color availability
   const groupProductsByColor = (products: Product[]) => {
@@ -597,7 +690,7 @@ export default function ProductGrid({ onAddToWishlist }: ProductGridProps) {
     return colorGroups;
   };
 
-  const filteredProducts = sampleProducts.filter(product => 
+  const filteredProducts = products.filter(product => 
     selectedCategory === 'All' || product.category === selectedCategory
   );
 
@@ -619,6 +712,34 @@ export default function ProductGrid({ onAddToWishlist }: ProductGridProps) {
   return (
     <section className="py-12 bg-gray-50">
       <div className="container mx-auto px-4">
+        {/* Data Source Indicator */}
+        {realProducts.length > 0 ? (
+          <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                <span className="text-green-700 font-medium">
+                  🔄 Live Inventory ({realProducts.length} models with {realProducts.reduce((sum, p) => sum + (p.stockInfo?.totalStock || 0), 0)} units available)
+                </span>
+              </div>
+              <span className="text-green-600 text-sm">Source: {source}</span>
+            </div>
+          </div>
+        ) : inventoryLoading ? (
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded">
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-3"></div>
+              <span className="text-blue-700">Loading live inventory data...</span>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded">
+            <div className="flex items-center">
+              <span className="text-yellow-700">⚠️ Showing sample catalog - live inventory unavailable</span>
+            </div>
+          </div>
+        )}
+
         {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
