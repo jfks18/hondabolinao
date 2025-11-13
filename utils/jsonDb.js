@@ -27,6 +27,29 @@ async function loadDB() {
       promos: Array.isArray(parsed.promos) ? parsed.promos : []
     };
   } catch (err) {
+    // If DB file doesn't exist, try to initialize from seed data
+    return await initializeFromSeed();
+  }
+}
+
+// Initialize DB from seed data (data/inventory.json) if available
+async function initializeFromSeed() {
+  try {
+    const seedPath = path.join(__dirname, '..', 'data', 'inventory.json');
+    const seedRaw = await fs.readFile(seedPath, 'utf8');
+    const seedData = JSON.parse(seedRaw);
+    
+    const initialDB = {
+      inventory: Array.isArray(seedData.inventory) ? seedData.inventory : [],
+      promos: Array.isArray(seedData.promos) ? seedData.promos : []
+    };
+    
+    // Save the seed data to the main DB path
+    console.log(`Initializing DB at ${DB_PATH} from seed data...`);
+    await saveDB(initialDB);
+    return initialDB;
+  } catch (seedErr) {
+    console.log('No seed data available, starting with empty DB');
     return { inventory: [], promos: [] };
   }
 }

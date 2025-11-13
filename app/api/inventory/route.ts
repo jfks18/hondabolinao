@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createRequire } from 'module';
+
 const require = createRequire(import.meta.url);
 const jsonDb = require('../../../utils/jsonDb.js');
 
 export const runtime = 'nodejs';
+
+
 
 const ALLOWED = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
