@@ -23,22 +23,6 @@ export default function Footer() {
               <h3 className="text-2xl font-bold mb-2">Stay Updated with Guanzon Honda 3S</h3>
               <p className="text-red-100">Get the latest Honda news, promos, and service updates</p>
             </div>
-            <form onSubmit={handleNewsletterSubmit} className="flex w-full md:w-auto">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="flex-1 md:w-80 px-4 py-3 rounded-l-lg text-gray-800 focus:outline-none"
-                required
-              />
-              <button
-                type="submit"
-                className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 rounded-r-lg transition-colors"
-              >
-                Subscribe
-              </button>
-            </form>
           </div>
         </div>
       </div>
@@ -100,12 +84,8 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4 text-red-400">Customer Support</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-300 hover:text-red-400 transition-colors">📞 Contact Us</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-red-400 transition-colors">🚚 Delivery Info</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-red-400 transition-colors">🔄 Trade-in Program</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-red-400 transition-colors">💳 Financing Options</a></li>
+              <li><a href="https://www.facebook.com/motorcentrumbolinao.guanzon" className="text-gray-300 hover:text-red-400 transition-colors">📞 Contact Us</a></li>
               <li><a href="#" className="text-gray-300 hover:text-red-400 transition-colors">🛡️ Honda Warranty</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-red-400 transition-colors">❓ FAQ</a></li>
             </ul>
           </div>
 
@@ -117,26 +97,25 @@ export default function Footer() {
                 <span className="text-red-400">📍</span>
                 <div>
                   <p className="text-white font-semibold">Guanzon Honda 3S Shop</p>
-                  <p className="text-gray-300">National Highway, Bolinao</p>
+                  <p className="text-gray-300">415 A.Ponce Corner T.Celi St.Germinal Bolinao</p>
                   <p className="text-gray-300">Pangasinan, Philippines 2406</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-red-400">📞</span>
                 <div>
-                  <p className="text-gray-300">(075) 554-9876</p>
-                  <p className="text-gray-300">Globe: 0917-123-4567</p>
+                  <p className="text-gray-300">Smart: 09178190155</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-red-400">✉️</span>
-                <p className="text-gray-300">guanzon.hondabolinao@gmail.com</p>
+                <p className="text-gray-300">mcc_bolinao@guanzongroup.com.ph</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-red-400">🕒</span>
                 <div>
-                  <p className="text-gray-300">Mon-Sat: 8:00AM-6:00PM</p>
-                  <p className="text-gray-300">Sunday: 9:00AM-5:00PM</p>
+                  <p className="text-gray-300">Mon-Sat: 8:30AM-5:30PM</p>
+                  <p className="text-gray-300">Sunday: CLOSE</p>
                 </div>
               </div>
               <div className="mt-4 p-3 bg-red-900/30 rounded-lg border-l-4 border-red-500">
@@ -159,12 +138,12 @@ export default function Footer() {
             <div className="text-gray-300 text-sm mb-4 md:mb-0">
               © 2024 Guanzon Honda 3S Shop - Bolinao Branch. All rights reserved. | Licensed Honda Dealer
             </div>
-            <div className="flex flex-wrap gap-6 text-sm">
+            {/* <div className="flex flex-wrap gap-6 text-sm">
               <a href="#" className="text-gray-300 hover:text-white">Privacy Policy</a>
               <a href="#" className="text-gray-300 hover:text-white">Terms of Service</a>
               <a href="#" className="text-gray-300 hover:text-white">Cookie Policy</a>
               <a href="#" className="text-gray-300 hover:text-white">Sitemap</a>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

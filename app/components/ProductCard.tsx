@@ -60,7 +60,7 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
   const isInStock = selectedItem ? (selectedItem.quantity > 0 && selectedItem.isAvailable) : false;
   const isLowStock = isInStock && stockLevel <= 3;
 
-  // Auto-select first available color when inventory loads or changes
+  // Auto-select first available color when inventory loads, but keep current selection if no available colors
   useEffect(() => {
     if (availableColors.length > 0 && !availableColors.includes(selectedColor)) {
       setSelectedColor(availableColors[0]);
@@ -203,20 +203,22 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
           {product.colors && product.colors.length > 0 && (
             <div className="mb-4">
               <div className="text-sm font-medium text-gray-700 mb-2 flex items-center justify-between">
-                <span>Available Colors ({availableColors.length}):</span>
+                <span>Colors ({product.colors?.length || 0}) - {availableColors.length} Available:</span>
                 {flashUpdate && (
                   <span className="text-xs text-blue-600 animate-pulse">🔄 Updated</span>
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                {product.colors?.filter(color => availableColors.includes(color.name)).map((color) => (
+                {product.colors?.map((color) => (
                   <button
                     key={color.name}
                     onClick={() => setSelectedColor(color.name)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${
+                    className={`w-8 h-8 rounded-full border-2 transition-all duration-200 relative ${
                       selectedColor === color.name 
                         ? 'border-red-600 scale-110 shadow-lg ring-2 ring-red-200' 
-                        : 'border-gray-300 hover:border-gray-400'
+                        : availableColors.includes(color.name)
+                        ? 'border-gray-300 hover:border-gray-400'
+                        : 'border-gray-200 opacity-60'
                     }`}
                     style={{ backgroundColor: color.hex }}
                     title={`${color.name} - ${getStockLevel(product.id, color.name)} in stock`}
@@ -224,9 +226,12 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
                     {selectedColor === color.name && (
                       <span className="text-white text-xs flex items-center justify-center h-full font-bold">✓</span>
                     )}
+                    {!availableColors.includes(color.name) && (
+                      <span className="absolute -top-1 -right-1 text-red-500 text-xs">⊗</span>
+                    )}
                   </button>
                 )) || (
-                  <span className="text-red-400 text-sm animate-pulse">❌ No colors available</span>
+                  <span className=\"text-gray-400 text-sm\">No color options</span>
                 )}
               </div>
               {selectedColor && (
@@ -278,24 +283,15 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
               VIEW FULL SPECS
             </button>
             <button
-              onClick={() => onAddToCart(product)}
-              disabled={!isInStock}
-              className={`flex-1 py-3 px-4 font-bold transition-all duration-200 text-sm ${
-                isInStock
-                  ? 'bg-red-600 text-white hover:bg-red-700 hover:scale-105 active:scale-95'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
+              onClick={() => window.open('https://www.facebook.com/motorcentrumbolinao.guanzon', '_blank')}
+              className="flex-1 py-3 px-4 font-bold transition-all duration-200 text-sm bg-red-600 text-white hover:bg-red-700 hover:scale-105 active:scale-95"
             >
-              {!selectedItem?.isAvailable ? (
-                '🚫 UNAVAILABLE'
-              ) : stockLevel === 0 ? (
-                '❌ OUT OF STOCK'
-              ) : (
-                <>
-                  🏍️ INQUIRE NOW
-                  {isLowStock && <span className="ml-1 animate-pulse">⚡</span>}
-                </>
-              )}
+              <>
+                📱 INQUIRE NOW
+                {!selectedItem?.isAvailable && <span className="ml-1">🚫</span>}
+                {selectedItem?.isAvailable && stockLevel === 0 && <span className="ml-1">❌</span>}
+                {isLowStock && <span className="ml-1 animate-pulse">⚡</span>}
+              </>
             </button>
           </div>
         </div>
