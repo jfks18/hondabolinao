@@ -637,30 +637,31 @@ export default function ProductGrid({ onAddToWishlist }: ProductGridProps) {
 
       const product = productMap.get(modelId)!;
       
-      // Add color if available and in stock
-      if (item.isAvailable && item.quantity > 0) {
-        // Ensure colors array is initialized
-        if (!product.colors) {
-          product.colors = [];
-        }
-        const existingColor = product.colors.find(c => c.name === item.colorName);
-        if (!existingColor) {
-          product.colors.push({
-            name: item.colorName,
-            hex: item.colorHex,
-            stock: item.quantity
-          });
-        }
+      // Add ALL colors to show full range (available and out of stock)
+      // Ensure colors array is initialized
+      if (!product.colors) {
+        product.colors = [];
+      }
+      const existingColor = product.colors.find(c => c.name === item.colorName);
+      if (!existingColor) {
+        product.colors.push({
+          name: item.colorName,
+          hex: item.colorHex,
+          stock: item.quantity
+        });
+      } else {
+        // Update stock if color already exists
+        existingColor.stock = item.quantity;
       }
       
       // Update stock info
       product.stockInfo!.totalStock += item.quantity;
-      product.stockInfo!.availableColors = product.colors?.length || 0;
+      product.stockInfo!.availableColors = product.colors?.filter(c => c.stock && c.stock > 0).length || 0;
       product.stockInfo!.isAvailable = product.stockInfo!.totalStock > 0;
     });
 
     return Array.from(productMap.values()).filter(product => 
-      product.stockInfo!.isAvailable && (product.colors?.length || 0) > 0
+      (product.colors?.length || 0) > 0
     );
   }, [inventory]);
 

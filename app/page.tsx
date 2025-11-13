@@ -100,6 +100,28 @@ export default function Home() {
             </div>
           )}
 
+          {/* Out of Stock Inquiry Notice */}
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mx-4 mb-4 rounded">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <span className="text-2xl">💬</span>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Interested in Out of Stock Units?
+                </h3>
+                <p className="text-sm text-blue-700 mt-1">
+                  Don't see your preferred color or model in stock? No worries! Click "INQUIRE NOW" on any motorcycle to check availability, expected delivery times, or place a special order through our Facebook page.
+                </p>
+                <div className="mt-2 flex items-center text-xs text-blue-600">
+                  <span className="mr-2">🏍️ All models available for order</span>
+                  <span className="mr-2">📅 Delivery scheduling available</span>
+                  <span>💰 Special financing options</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <main>
             <HeroSection />
             <ProductGrid 
