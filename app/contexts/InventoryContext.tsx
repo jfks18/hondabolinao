@@ -94,7 +94,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
     // Periodic data refresh (every 5 minutes) to ensure data consistency
     const periodicRefresh = setInterval(() => {
-      if (!loading && source === 'api') {
+      // Check current state inside the interval callback to avoid dependencies
+      if (document.visibilityState === 'visible') {
         console.log('🔄 Periodic data refresh...');
         loadInitialData();
       }
@@ -106,7 +107,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       clearInterval(checkConnection);
       clearInterval(periodicRefresh);
     };
-  }, [handleInventoryUpdate, handlePromoUpdate, loading, source]);
+  }, [handleInventoryUpdate, handlePromoUpdate]); // Removed loading and source deps
 
   // Load initial data
   useEffect(() => {
@@ -442,10 +443,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     console.log('🔄 Refreshing inventory data...');
     await loadInitialData();
-  };
+  }, []); // Empty deps - loadInitialData should be stable
 
   const loadPublicSeed = async () => {
     const publicResult = await fetchFromPublic();

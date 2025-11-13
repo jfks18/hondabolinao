@@ -51,11 +51,12 @@ export default function RealTimeInventoryAdmin() {
   const [selectedModel, setSelectedModel] = useState('');
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
-  // Auto-refresh data when admin page loads
+  // Auto-refresh data when admin page loads (only once on mount)
   useEffect(() => {
     console.log('🔄 Admin page mounted, refreshing inventory data...');
     refreshData();
-  }, [refreshData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run on mount
 
   // Group inventory by motorcycle model
   const groupInventoryByModel = () => {
