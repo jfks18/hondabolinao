@@ -34,7 +34,7 @@ export async function OPTIONS(req: NextRequest) {
   const headers = {
     'Access-Control-Allow-Origin': allowed,
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Cache-Control, Authorization, X-Requested-With',
     'Vary': 'Origin'
   };
   return new NextResponse(null, { status: 204, headers });

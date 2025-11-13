@@ -57,7 +57,7 @@ services:
       - key: NEXT_PUBLIC_WSS_URL
         value: wss://honda-websocket-server.onrender.com
       - key: NEXT_PUBLIC_API_BASE
-        value: https://honda-websocket-server.onrender.com
+        value: https://honda-dealership-frontend.onrender.com
       - key: JSON_DB_PATH
         value: "/tmp/inventory.json"
       - key: ALLOWED_ORIGINS
