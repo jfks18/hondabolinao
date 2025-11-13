@@ -390,7 +390,8 @@ class SecureWebSocketServer {
         return;
       }
 
-      if (req.url === '/inventory' && req.method === 'GET') {
+      // Handle both /inventory and /api/inventory routes
+      if ((req.url === '/inventory' || req.url === '/api/inventory') && req.method === 'GET') {
         // Return the current DB (inventory + promos) directly from the JSON DB on disk
         loadDB().then(data => {
           const inv = Array.isArray(data.inventory) ? data.inventory : [];
@@ -405,7 +406,7 @@ class SecureWebSocketServer {
         return;
       }
 
-      if (req.url === '/inventory' && req.method === 'POST') {
+      if ((req.url === '/inventory' || req.url === '/api/inventory') && req.method === 'POST') {
         // Accept a JSON body with a single item to upsert
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -427,8 +428,8 @@ class SecureWebSocketServer {
         return;
       }
 
-      // Delete promo: DELETE /promo?id=PROMO_ID
-      if (req.url.startsWith('/promo') && req.method === 'DELETE') {
+      // Delete promo: DELETE /promo?id=PROMO_ID or /api/promo?id=PROMO_ID
+      if ((req.url.startsWith('/promo') || req.url.startsWith('/api/promo')) && req.method === 'DELETE') {
         const url = new URL(req.url, `http://${req.headers.host}`);
         const promoId = url.searchParams.get('id');
         if (!promoId) {
@@ -449,7 +450,7 @@ class SecureWebSocketServer {
         return;
       }
 
-      if (req.url === '/promo' && req.method === 'POST') {
+      if ((req.url === '/promo' || req.url === '/api/promo') && req.method === 'POST') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', async () => {
@@ -466,6 +467,20 @@ class SecureWebSocketServer {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ ok: false, error: String(err) }));
           }
+        });
+        return;
+      }
+
+      // GET /promo or /api/promo - return just promos
+      if ((req.url === '/promo' || req.url === '/api/promo') && req.method === 'GET') {
+        loadDB().then(data => {
+          const promos = Array.isArray(data.promos) ? data.promos : [];
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ promos }));
+        }).catch(err => {
+          console.error('🚨 /promo GET error:', err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ promos: [] }));
         });
         return;
       } else if (req.url === '/stats') {
