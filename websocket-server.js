@@ -360,12 +360,19 @@ class SecureWebSocketServer {
   // 🌐 Setup HTTP routes
   setupHTTPRoutes() {
     this.server.on('request', (req, res) => {
+      console.log(`📡 HTTP ${req.method} ${req.url} from origin: ${req.headers.origin || 'none'}`);
+      
       // Enable CORS - respond with the request origin when it's allowed.
       // Browsers require a single origin or '*' for Access-Control-Allow-Origin.
       const requestOrigin = req.headers.origin;
       const allowed = (this.security.allowedOrigins || []).filter(Boolean);
+      
+      console.log(`🔍 CORS check: origin=${requestOrigin}, allowed=${JSON.stringify(allowed)}`);
 
-      if (requestOrigin && (allowed.length === 0 || allowed.includes(requestOrigin) || (process.env.NODE_ENV === 'production' && requestOrigin.includes('onrender.com')))) {
+      // Check if wildcard is allowed
+      if (allowed.includes('*')) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+      } else if (requestOrigin && (allowed.length === 0 || allowed.includes(requestOrigin) || (process.env.NODE_ENV === 'production' && requestOrigin.includes('onrender.com')))) {
         res.setHeader('Access-Control-Allow-Origin', requestOrigin);
         res.setHeader('Vary', 'Origin');
       } else if (allowed.length === 1) {
