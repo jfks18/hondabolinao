@@ -231,7 +231,7 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
                     )}
                   </button>
                 )) || (
-                  <span className=\"text-gray-400 text-sm\">No color options</span>
+                  <span className="text-gray-400 text-sm">No color options</span>
                 )}
               </div>
               {selectedColor && (
