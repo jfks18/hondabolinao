@@ -44,10 +44,14 @@ interface ProductCardProps {
 export default function ProductCard({ product, onAddToCart, onAddToWishlist }: ProductCardProps) {
   const { getAvailableColors, getStockLevel, getActivePromos, lastUpdate, inventory } = useInventory();
   const [showSpecs, setShowSpecs] = useState(false);
-  const [selectedColor, setSelectedColor] = useState(product.colors?.[0]?.name || '');
   const [flashUpdate, setFlashUpdate] = useState(false);
   
   const availableColors = getAvailableColors(product.id);
+  
+  // Initialize with first available color, fallback to first color if none available
+  const initialColor = availableColors.length > 0 ? availableColors[0] : (product.colors?.[0]?.name || '');
+  const [selectedColor, setSelectedColor] = useState(initialColor);
+  
   const stockLevel = getStockLevel(product.id, selectedColor);
   const activePromos = getActivePromos(product.id);
   
@@ -55,6 +59,13 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
   const selectedItem = inventory.find(item => item.modelId === product.id && item.colorName === selectedColor);
   const isInStock = selectedItem ? (selectedItem.quantity > 0 && selectedItem.isAvailable) : false;
   const isLowStock = isInStock && stockLevel <= 3;
+
+  // Auto-select first available color when inventory loads or changes
+  useEffect(() => {
+    if (availableColors.length > 0 && !availableColors.includes(selectedColor)) {
+      setSelectedColor(availableColors[0]);
+    }
+  }, [availableColors, selectedColor]);
 
   // Flash animation when data updates
   useEffect(() => {
