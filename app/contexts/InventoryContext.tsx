@@ -496,8 +496,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       getAvailableColors,
       getStockLevel,
       getActivePromos,
-      refreshData
-      ,
+      refreshData,
       loadPublicSeed
     }}>
       {children}

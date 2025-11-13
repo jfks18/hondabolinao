@@ -42,7 +42,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAddToCart, onAddToWishlist }: ProductCardProps) {
-  const { getAvailableColors, getStockLevel, getActivePromos, lastUpdate } = useInventory();
+  const { getAvailableColors, getStockLevel, getActivePromos, lastUpdate, inventory } = useInventory();
   const [showSpecs, setShowSpecs] = useState(false);
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0]?.name || '');
   const [flashUpdate, setFlashUpdate] = useState(false);
@@ -51,8 +51,10 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
   const stockLevel = getStockLevel(product.id, selectedColor);
   const activePromos = getActivePromos(product.id);
   
-  const isInStock = stockLevel > 0;
-  const isLowStock = stockLevel > 0 && stockLevel <= 3;
+  // Check both quantity AND isAvailable flag for the selected color
+  const selectedItem = inventory.find(item => item.modelId === product.id && item.colorName === selectedColor);
+  const isInStock = selectedItem ? (selectedItem.quantity > 0 && selectedItem.isAvailable) : false;
+  const isLowStock = isInStock && stockLevel <= 3;
 
   // Flash animation when data updates
   useEffect(() => {
@@ -111,7 +113,11 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
         <div className="relative bg-white aspect-[4/3] overflow-hidden">
           {/* Real-time Stock Status Badge */}
           <div className="absolute top-2 left-2 z-10">
-            {!isInStock ? (
+            {!selectedItem?.isAvailable ? (
+              <span className="bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                🚫 UNAVAILABLE
+              </span>
+            ) : stockLevel === 0 ? (
               <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-bounce">
                 ❌ OUT OF STOCK
               </span>
@@ -269,13 +275,15 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >
-              {isInStock ? (
+              {!selectedItem?.isAvailable ? (
+                '🚫 UNAVAILABLE'
+              ) : stockLevel === 0 ? (
+                '❌ OUT OF STOCK'
+              ) : (
                 <>
                   🏍️ INQUIRE NOW
                   {isLowStock && <span className="ml-1 animate-pulse">⚡</span>}
                 </>
-              ) : (
-                '❌ OUT OF STOCK'
               )}
             </button>
           </div>
