@@ -381,7 +381,7 @@ class SecureWebSocketServer {
       }
 
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cache-Control, Authorization, X-Requested-With');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cache-Control, Authorization, X-Requested-With, Expires, Pragma, If-Modified-Since');
       // Allow credentials when needed
       res.setHeader('Access-Control-Allow-Credentials', 'true');
 
