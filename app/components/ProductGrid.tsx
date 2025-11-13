@@ -713,33 +713,7 @@ export default function ProductGrid({ onAddToWishlist }: ProductGridProps) {
   return (
     <section className="py-12 bg-gray-50">
       <div className="container mx-auto px-4">
-        {/* Data Source Indicator */}
-        {realProducts.length > 0 ? (
-          <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                <span className="text-green-700 font-medium">
-                  🔄 Live Inventory ({realProducts.length} models with {realProducts.reduce((sum, p) => sum + (p.stockInfo?.totalStock || 0), 0)} units available)
-                </span>
-              </div>
-              <span className="text-green-600 text-sm">Source: {source}</span>
-            </div>
-          </div>
-        ) : inventoryLoading ? (
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded">
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-3"></div>
-              <span className="text-blue-700">Loading live inventory data...</span>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded">
-            <div className="flex items-center">
-              <span className="text-yellow-700">⚠️ Showing sample catalog - live inventory unavailable</span>
-            </div>
-          </div>
-        )}
+        
 
         {/* Section Header */}
         <div className="text-center mb-12">
